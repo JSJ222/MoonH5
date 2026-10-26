@@ -1,0 +1,234 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "local/moonh5"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn metadata_checksum(Bytes) -> UInt32
+
+// Errors
+pub suberror H5Error {
+  Invalid(String, Int32)
+  Unsupported(String, Int32)
+  Limit(String)
+  NotFound(String)
+} derive(Eq, @debug.Debug)
+pub fn H5Error::equal(Self, Self) -> Bool
+pub fn H5Error::not_equal(Self, Self) -> Bool
+pub fn H5Error::to_repr(Self) -> @debug.Repr
+
+// Types and methods
+pub struct ArrayValue {
+  dtype : DataType
+  space : Dataspace
+  raw : Bytes
+} derive(@debug.Debug)
+pub fn ArrayValue::bytes(Self) -> Bytes
+pub fn ArrayValue::dataspace(Self) -> Dataspace
+pub fn ArrayValue::datatype(Self) -> DataType
+pub fn ArrayValue::float_at(Self, Int32) -> Double raise H5Error
+pub fn ArrayValue::from_floats(Dataspace, Array[Double], limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::from_signed(Dataspace, Array[Int64], limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::from_strings(Dataspace, Array[String], Int32, limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::from_unsigned(Dataspace, Array[UInt64], limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::length(Self) -> Int32 raise H5Error
+pub fn ArrayValue::new(DataType, Dataspace, Bytes, limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::select(Self, Selection) -> Self raise H5Error
+pub fn ArrayValue::signed_at(Self, Int32) -> Int64 raise H5Error
+pub fn ArrayValue::string_at(Self, Int32) -> String raise H5Error
+pub fn ArrayValue::to_repr(Self) -> @debug.Repr
+pub fn ArrayValue::unsigned_at(Self, Int32) -> UInt64 raise H5Error
+pub fn ArrayValue::with_byte_order(Self, ByteOrder) -> Self raise H5Error
+pub fn ArrayValue::with_selection(Self, Selection, Self) -> Self raise H5Error
+
+pub(all) struct Attribute {
+  name : String
+  value : ArrayValue
+} derive(@debug.Debug)
+pub fn Attribute::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Axis {
+  start : Int32
+  stride : Int32
+  count : Int32
+  block : Int32
+} derive(Eq, @debug.Debug)
+pub fn Axis::equal(Self, Self) -> Bool
+pub fn Axis::not_equal(Self, Self) -> Bool
+pub fn Axis::to_repr(Self) -> @debug.Repr
+
+type BuildLink
+
+type BuildNode
+
+pub(all) enum ByteOrder {
+  Little
+  Big
+} derive(Eq, @debug.Debug)
+pub fn ByteOrder::equal(Self, Self) -> Bool
+pub fn ByteOrder::not_equal(Self, Self) -> Bool
+pub fn ByteOrder::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ChunkInfo {
+  origin : Array[Int32]
+  address : Int32
+  stored_bytes : Int32
+  filter_mask : UInt32
+} derive(Eq, @debug.Debug)
+pub fn ChunkInfo::equal(Self, Self) -> Bool
+pub fn ChunkInfo::not_equal(Self, Self) -> Bool
+pub fn ChunkInfo::to_repr(Self) -> @debug.Repr
+
+pub(all) enum DataType {
+  Signed(Int32, ByteOrder)
+  Unsigned(Int32, ByteOrder)
+  Float(Int32, ByteOrder)
+  FixedString(Int32, StringPadding, Bool)
+} derive(Eq, @debug.Debug)
+pub fn DataType::equal(Self, Self) -> Bool
+pub fn DataType::not_equal(Self, Self) -> Bool
+pub fn DataType::to_repr(Self) -> @debug.Repr
+pub fn DataType::width(Self) -> Int32 raise H5Error
+
+pub(all) struct DatasetInfo {
+  datatype : DataType
+  dataspace : Dataspace
+  storage : Storage
+  fill : Bytes
+} derive(@debug.Debug)
+pub fn DatasetInfo::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Dataspace {
+  Scalar
+  Simple(Array[Int32])
+  Null
+} derive(Eq, @debug.Debug)
+pub fn Dataspace::elements(Self, limits? : Limits) -> Int32 raise H5Error
+pub fn Dataspace::equal(Self, Self) -> Bool
+pub fn Dataspace::not_equal(Self, Self) -> Bool
+pub fn Dataspace::to_repr(Self) -> @debug.Repr
+
+pub struct Document {
+  nodes : Map[String, BuildNode]
+  aliases : Map[String, BuildLink]
+  limits : Limits
+}
+pub fn Document::add_dataset(Self, String, ArrayValue, compact? : Bool) -> Unit raise H5Error
+pub fn Document::add_group(Self, String) -> Unit raise H5Error
+pub fn Document::add_hard_link(Self, String, String) -> Unit raise H5Error
+pub fn Document::add_soft_link(Self, String, String) -> Unit raise H5Error
+pub fn Document::encode(Self) -> Bytes raise H5Error
+pub fn Document::new(limits? : Limits) -> Self raise H5Error
+pub fn Document::set_attribute(Self, String, String, ArrayValue) -> Unit raise H5Error
+
+pub(all) struct FilterInfo {
+  id : Int32
+  optional : Bool
+  parameters : Array[Int32]
+} derive(Eq, @debug.Debug)
+pub fn FilterInfo::equal(Self, Self) -> Bool
+pub fn FilterInfo::not_equal(Self, Self) -> Bool
+pub fn FilterInfo::to_repr(Self) -> @debug.Repr
+
+pub struct H5File {
+  data : Bytes
+  sb : Superblock
+  limits : Limits
+}
+pub fn H5File::attributes(Self, path? : String) -> Array[Attribute] raise H5Error
+pub fn H5File::chunks(Self, String) -> Array[ChunkInfo] raise H5Error
+pub fn H5File::dataset_info(Self, String) -> DatasetInfo raise H5Error
+pub fn H5File::filters(Self, String) -> Array[FilterInfo] raise H5Error
+pub fn H5File::links(Self, path? : String) -> Array[Link] raise H5Error
+pub fn H5File::object_address(Self, String) -> Int32 raise H5Error
+pub fn H5File::open(Bytes, limits? : Limits) -> Self raise H5Error
+pub fn H5File::read(Self, String) -> ArrayValue raise H5Error
+pub fn H5File::read_selection(Self, String, Selection) -> ArrayValue raise H5Error
+pub fn H5File::superblock_version(Self) -> Int32
+pub fn H5File::to_document(Self) -> Document raise H5Error
+pub fn H5File::walk(Self) -> Array[ObjectEntry] raise H5Error
+
+pub(all) struct Limits {
+  max_file_bytes : Int32
+  max_elements : Int32
+  max_metadata_bytes : Int32
+  max_objects : Int32
+  max_depth : Int32
+  max_rank : Int32
+} derive(Eq, @debug.Debug)
+pub fn Limits::default() -> Self
+pub fn Limits::equal(Self, Self) -> Bool
+pub fn Limits::not_equal(Self, Self) -> Bool
+pub fn Limits::to_repr(Self) -> @debug.Repr
+
+pub(all) struct Link {
+  name : String
+  target : LinkTarget
+} derive(Eq, @debug.Debug)
+pub fn Link::equal(Self, Self) -> Bool
+pub fn Link::not_equal(Self, Self) -> Bool
+pub fn Link::to_repr(Self) -> @debug.Repr
+
+pub enum LinkTarget {
+  Hard(Int32)
+  Soft(String)
+} derive(Eq, @debug.Debug)
+pub fn LinkTarget::equal(Self, Self) -> Bool
+pub fn LinkTarget::not_equal(Self, Self) -> Bool
+pub fn LinkTarget::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ObjectEntry {
+  path : String
+  address : Int32
+  dataset : Bool
+} derive(Eq, @debug.Debug)
+pub fn ObjectEntry::equal(Self, Self) -> Bool
+pub fn ObjectEntry::not_equal(Self, Self) -> Bool
+pub fn ObjectEntry::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ReadSpan {
+  source_byte : Int32
+  output_byte : Int32
+  length : Int32
+} derive(Eq, @debug.Debug)
+pub fn ReadSpan::equal(Self, Self) -> Bool
+pub fn ReadSpan::not_equal(Self, Self) -> Bool
+pub fn ReadSpan::to_repr(Self) -> @debug.Repr
+
+pub struct Selection {
+  source : Dataspace
+  result : Dataspace
+  axes : Array[Axis]
+  limits : Limits
+}
+pub fn Selection::all(Dataspace, limits? : Limits) -> Self raise H5Error
+pub fn Selection::dataspace(Self) -> Dataspace
+pub fn Selection::new(Dataspace, Array[Axis], limits? : Limits) -> Self raise H5Error
+pub fn Selection::spans(Self, DataType) -> Array[ReadSpan] raise H5Error
+
+pub enum Storage {
+  Compact(Bytes)
+  Contiguous(Int32?, Int32)
+  Chunked(Int32?, Array[Int32])
+  FixedArray(Int32?, Array[Int32], Int32)
+} derive(Eq, @debug.Debug)
+pub fn Storage::equal(Self, Self) -> Bool
+pub fn Storage::not_equal(Self, Self) -> Bool
+pub fn Storage::to_repr(Self) -> @debug.Repr
+
+pub(all) enum StringPadding {
+  NullTerminated
+  NullPadded
+  SpacePadded
+} derive(Eq, @debug.Debug)
+pub fn StringPadding::equal(Self, Self) -> Bool
+pub fn StringPadding::not_equal(Self, Self) -> Bool
+pub fn StringPadding::to_repr(Self) -> @debug.Repr
+
+type Superblock
+
+// Type aliases
+
+// Traits
