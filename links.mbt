@@ -105,7 +105,9 @@ fn encode_soft_link(name : String, target : String) -> Message raise H5Error {
   valid_name(name)
   let rawname = @utf8.encode(name)
   let rawtarget = @utf8.encode(target)
-  if checked_add(rawname.length(), rawtarget.length()) > 65000 { raise Limit("soft link length") }
+  if checked_add(rawname.length(), rawtarget.length()) > 65000 {
+    raise Limit("soft link length")
+  }
   let b = buffer()
   b.u8(1)
   b.u8(25)

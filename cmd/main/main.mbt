@@ -27,6 +27,9 @@ fn array_json(value : @h5.ArrayValue) -> Json raise {
             Json::string("NaN")
           } else if n.is_inf() {
             Json::string(if n < 0 { "-Infinity" } else { "Infinity" })
+          } else if n == 0.0 &&
+            n.reinterpret_as_uint64() == 0x8000000000000000UL {
+            Json::string("-0")
           } else {
             Json::number(n)
           }
@@ -47,9 +50,15 @@ async fn run() -> Unit {
   let args = @env.args()
   if args.length() == 4 && args[1] == "repack" {
     let limits = @h5.Limits::default()
-    if @fs.file_size(args[2][:]) > limits.max_file_bytes.to_int64() { raise Failure("CLI input byte limit") }
+    if @fs.file_size(args[2][:]) > limits.max_file_bytes.to_int64() {
+      raise Failure("CLI input byte limit")
+    }
     let file = @h5.H5File::open(@fs.read_file(args[2][:]).binary())
-    @fs.write_file(args[3][:], file.to_document().encode(), create_mode=CreateNew)
+    @fs.write_file(
+      args[3][:],
+      file.to_document().encode(),
+      create_mode=CreateNew,
+    )
     println("created semantically repacked HDF5 file")
     return
   }

@@ -1,15 +1,21 @@
 ///|
 priv struct WriteIndex {
   children : Map[String, Array[(String, BuildLink)]]
-  references : Map[String, Int]
+  references : Map[String, Int32]
 }
 
-///| Build adjacency once, avoiding a whole-document scan for every group header.
-fn Document::write_index(self : Document, paths : Array[String]) -> WriteIndex raise H5Error {
+///|
+/// Build adjacency once, avoiding a whole-document scan for every group header.
+fn Document::write_index(
+  self : Document,
+  paths : Array[String],
+) -> WriteIndex raise H5Error {
   let children : Map[String, Array[(String, BuildLink)]] = Map([])
-  let references : Map[String, Int] = Map([])
+  let references : Map[String, Int32] = Map([])
   for path in paths {
-    if path == "/" { continue }
+    if path == "/" {
+      continue
+    }
     let (parent, name) = parent_path(path)
     let group = children.get_or_init(parent, () => [])
     group.push((name, Object(path)))
@@ -17,10 +23,14 @@ fn Document::write_index(self : Document, paths : Array[String]) -> WriteIndex r
   for path, target in self.aliases {
     let (parent, name) = parent_path(path)
     children.get_or_init(parent, () => []).push((name, target))
-    if target is Object(target) { references[target] = checked_add(references.get(target).unwrap_or(1), 1) }
+    if target is Object(target) {
+      references[target] = checked_add(references.get(target).unwrap_or(1), 1)
+    }
   }
-  for _, group in children { group.sort_by((a, b) => a.0.compare(b.0)) }
-  { children, references }
+  for _, group in children {
+    group.sort_by((a, b) => a.0.compare(b.0))
+  }
+  { children, references, }
 }
 
 ///|
@@ -68,10 +78,13 @@ fn Document::header(
       messages.push(message(2, info.finish()))
       messages.push(message(10, b"\x00\x01\xff\xff\xff\xff"))
       for (name, target) in index.children.get(path).unwrap_or([]) {
-        messages.push(match target {
-          Object(target) => encode_link(name, addresses.get(target).unwrap_or(0))
-          Path(target) => encode_soft_link(name, target)
-        })
+        messages.push(
+          match target {
+            Object(target) =>
+              encode_link(name, addresses.get(target).unwrap_or(0))
+            Path(target) => encode_soft_link(name, target)
+          },
+        )
       }
     }
   }

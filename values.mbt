@@ -44,7 +44,7 @@ pub fn ArrayValue::bytes(self : ArrayValue) -> Bytes {
 
 ///|
 pub fn ArrayValue::length(self : ArrayValue) -> Int32 raise H5Error {
-  self.space.elements()
+  self.raw.length() / self.dtype.width()
 }
 
 ///|
