@@ -1,4 +1,4 @@
-///|
+///| White-box corruption cases exercise internal bounded readers as well as public APIs.
 fn sample_document() -> Bytes raise H5Error {
   let doc = Document::new()
   doc.add_group("/g")
