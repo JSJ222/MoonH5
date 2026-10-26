@@ -6,6 +6,12 @@ pub suberror H5Error {
   NotFound(String)
 } derive(Debug, Eq)
 
+///|
+pub extend H5Error with @debug.Debug::{to_repr}
+
+///|
+pub extend H5Error with Eq::{equal, not_equal}
+
 ///| Hard bounds apply before allocation or traversal, even for trusted input.
 pub(all) struct Limits {
   max_file_bytes : Int
@@ -15,6 +21,12 @@ pub(all) struct Limits {
   max_depth : Int
   max_rank : Int
 } derive(Debug, Eq)
+
+///|
+pub extend Limits with @debug.Debug::{to_repr}
+
+///|
+pub extend Limits with Eq::{equal, not_equal}
 
 ///|
 pub fn Limits::default() -> Limits {
