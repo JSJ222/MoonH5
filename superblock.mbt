@@ -1,5 +1,5 @@
 ///|
-priv struct Superblock {
+struct Superblock {
   version : Int
   offset_width : Int
   size_width : Int
