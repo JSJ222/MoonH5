@@ -3,7 +3,7 @@ fn rotate(x : UInt, n : Int) -> UInt { (x << n) | (x >> (32 - n)) }
 
 ///| The mixing steps are kept explicit to preserve modular UInt arithmetic.
 pub fn metadata_checksum(data : Bytes) -> UInt {
-  let mut a = 0xdeadbeefU + data.length().to_uint()
+  let mut a = 0xdeadbeefU + data.length().reinterpret_as_uint()
   let mut b = a
   let mut c = a
   let mut pos = 0
