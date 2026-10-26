@@ -80,6 +80,9 @@ fn decode_fill(m : Message, width : Int32) -> Bytes raise H5Error {
       if (flags & 16) != 0 {
         raise Unsupported("undefined fill value", m.at)
       }
+      if (flags & 32) == 0 {
+        return Bytes::from_array(Array::make(width, 0))
+      }
       (flags & 32) != 0
     }
     _ => raise Unsupported("fill message version", m.at)

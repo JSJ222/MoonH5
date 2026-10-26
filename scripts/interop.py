@@ -27,6 +27,20 @@ def generate(directory):
                 g.create_dataset("chunked", data=np.arange(35, dtype="i2").reshape(5, 7), chunks=(2, 3))
                 g.create_dataset("filtered", data=np.arange(35, dtype=">i4").reshape(5, 7), chunks=(2, 3), compression="gzip", shuffle=True, fletcher32=True)
     print("generated 3 original h5py interoperability fixtures")
+    with h5py.File(directory / "edge.h5", "w", libver="v108", userblock_size=512) as f:
+        f.create_dataset("big_endian_float", data=np.array([1.25, -0., np.inf, np.nan], dtype=">f4"))
+        f.create_dataset("many_chunks", data=np.arange(19*23, dtype="i4").reshape(19, 23), chunks=(1, 1))
+        f.create_dataset("cube", data=np.arange(60, dtype="u2").reshape(3, 4, 5), chunks=(2, 3, 2), compression="gzip", shuffle=True)
+        sparse = f.create_dataset("sparse", shape=(5, 7), chunks=(2, 3), dtype="i2", fillvalue=-9)
+        sparse[1, 2] = 77
+        f.create_dataset("u64", data=np.array([2**64 - 1], dtype=">u8"))
+        f.attrs["version"] = np.array([1, 2], dtype="u2")
+    with h5py.File(directory / "unsupported.h5", "w", libver="latest") as f:
+        f.create_dataset("modern_chunks", data=np.arange(12), chunks=(3,))
+        f.create_dataset("vlen", data="hello", dtype=h5py.string_dtype())
+        g = f.create_group("dense")
+        for i in range(12):
+            g.create_group(str(i))
 
 
 def check(path):
