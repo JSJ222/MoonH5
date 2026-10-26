@@ -63,7 +63,9 @@ async fn run() -> Unit {
     return
   }
   if args.length() != 3 || !["read", "write-demo"].contains(args[1]) {
-    raise Failure("usage: moonh5 read FILE.h5 | write-demo NEW.h5")
+    raise Failure(
+      "usage: moonh5 read FILE.h5 | write-demo NEW.h5 | repack INPUT.h5 NEW.h5",
+    )
   }
   if args[1] == "write-demo" {
     let doc = @h5.Document::new()
