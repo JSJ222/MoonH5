@@ -85,7 +85,7 @@ fn decode_fill(m : Message, width : Int32) -> Bytes raise H5Error {
     _ => raise Unsupported("fill message version", m.at)
   }
   if !defined {
-    return Bytes::from_array(Array::make(width, 0))
+    raise Unsupported("undefined fill value", m.at)
   }
   let size = c.index(4)
   if size == 0 {

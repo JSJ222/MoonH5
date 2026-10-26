@@ -12,8 +12,9 @@ pub fn H5File::open(
   limits~ : Limits = Limits::default(),
 ) -> H5File raise H5Error {
   let sb = read_superblock(data, limits)
-  ignore(read_messages(data, sb, sb.root, limits))
-  { data, sb, limits, }
+  let bounded = data[:sb.eof].to_owned()
+  ignore(read_messages(bounded, sb, sb.root, limits))
+  { data: bounded, sb, limits, }
 }
 
 ///|
