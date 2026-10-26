@@ -136,7 +136,7 @@ pub fn H5File::read_selection(self : H5File, path : String, selection : Selectio
       for span in selection.spans(info.datatype) { b.bytes(self.range(checked_add(address, span.source_byte), span.length)) }
     }
     Contiguous(None, _) => b.bytes(repeated_fill(info.fill, count, self.limits))
-    Chunked(_, _) => return self.read(path).select(selection)
+    Chunked(_, _) => return self.read_chunked_selection(path, info, selection)
   }
   ArrayValue::new(info.datatype, selection.result, b.finish(), limits=self.limits)
 }

@@ -22,7 +22,7 @@ pub fn H5File::read(self : H5File, path : String) -> ArrayValue raise H5Error {
     Compact(bytes) => bytes
     Contiguous(Some(address), size) => self.range(address, size)
     Contiguous(None, _) => repeated_fill(info.fill, info.dataspace.elements(limits=self.limits), self.limits)
-    Chunked(_, _) => raise Unsupported("chunked read is not yet implemented", 0)
+    Chunked(_, _) => return self.read_chunked_selection(path, info, Selection::all(info.dataspace, limits=self.limits))
   }
   ArrayValue::new(info.datatype, info.dataspace, raw, limits=self.limits)
 }
