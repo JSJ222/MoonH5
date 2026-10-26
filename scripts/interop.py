@@ -23,9 +23,8 @@ def generate(directory):
             f.create_dataset("fill", shape=(2, 3), dtype="i2", fillvalue=-7)
             f["same"] = g["samples"]
             f["relative"] = h5py.SoftLink("run/samples")
-            if bound != "latest":
-                g.create_dataset("chunked", data=np.arange(35, dtype="i2").reshape(5, 7), chunks=(2, 3))
-                g.create_dataset("filtered", data=np.arange(35, dtype=">i4").reshape(5, 7), chunks=(2, 3), compression="gzip", shuffle=True, fletcher32=True)
+            g.create_dataset("chunked", data=np.arange(35, dtype="i2").reshape(5, 7), chunks=(2, 3))
+            g.create_dataset("filtered", data=np.arange(35, dtype=">i4").reshape(5, 7), chunks=(2, 3), compression="gzip", shuffle=True, fletcher32=True)
     print("generated 3 original h5py interoperability fixtures")
     with h5py.File(directory / "edge.h5", "w", libver="v108", userblock_size=512) as f:
         f.create_dataset("big_endian_float", data=np.array([1.25, -0., np.inf, np.nan], dtype=">f4"))
@@ -37,6 +36,7 @@ def generate(directory):
         f.attrs["version"] = np.array([1, 2], dtype="u2")
     with h5py.File(directory / "unsupported.h5", "w", libver="latest") as f:
         f.create_dataset("modern_chunks", data=np.arange(12), chunks=(3,))
+        f.create_dataset("extensible", data=np.arange(12), chunks=(3,), maxshape=(None,))
         f.create_dataset("vlen", data="hello", dtype=h5py.string_dtype())
         g = f.create_group("dense")
         for i in range(12):

@@ -22,6 +22,9 @@ fn H5File::chunk_index(
   self : H5File,
   info : DatasetInfo,
 ) -> Array[ChunkInfo] raise H5Error {
+  if info.storage is FixedArray(_, _, _) {
+    return self.fixed_array_chunks(info)
+  }
   guard info.storage is Chunked(root, dimensions) else {
     raise Invalid("dataset is not chunked", 0)
   }
@@ -91,7 +94,7 @@ fn H5File::chunk_index(
         if out.length() >= self.limits.max_objects {
           raise Limit("chunk count")
         }
-        ignore(self.range(child, stored_bytes))
+        self.check_range(child, stored_bytes)
         out.push({ origin, address: child, stored_bytes, filter_mask: mask, })
       }
     }
@@ -121,8 +124,9 @@ fn H5File::read_chunked_selection(
   info : DatasetInfo,
   selection : Selection,
 ) -> ArrayValue raise H5Error {
-  guard info.storage is Chunked(_, dims) else {
-    raise Invalid("not chunked", 0)
+  let dims = match info.storage {
+    Chunked(_, dims) | FixedArray(_, dims, _) => dims
+    _ => raise Invalid("not chunked", 0)
   }
   guard info.dataspace is Simple(shape) else {
     raise Invalid("chunked scalar/null", 0)

@@ -22,13 +22,22 @@ fn H5File::range(
   address : Int32,
   length : Int32,
 ) -> Bytes raise H5Error {
+  self.check_range(address, length)
+  bytes_at(self.data, address, length)
+}
+
+///|
+fn H5File::check_range(
+  self : H5File,
+  address : Int32,
+  length : Int32,
+) -> Unit raise H5Error {
   if address < self.sb.base ||
     length < 0 ||
     address > self.sb.eof ||
     length > self.sb.eof - address {
     raise Invalid("raw dataset outside declared file", address)
   }
-  bytes_at(self.data, address, length)
 }
 
 ///|
@@ -43,7 +52,7 @@ pub fn H5File::read(self : H5File, path : String) -> ArrayValue raise H5Error {
         info.dataspace.elements(limits=self.limits),
         self.limits,
       )
-    Chunked(_, _) =>
+    Chunked(_, _) | FixedArray(_, _, _) =>
       return self.read_chunked_selection(
         path,
         info,

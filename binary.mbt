@@ -48,7 +48,7 @@ fn Cursor::bytes(self : Cursor, n : Int32) -> Bytes raise H5Error {
 
 ///|
 fn Cursor::uint(self : Cursor, width : Int32) -> UInt64 raise H5Error {
-  if width != 1 && width != 2 && width != 4 && width != 8 {
+  if width < 1 || width > 8 {
     raise Unsupported("integer field width", self.pos)
   }
   self.need(width)

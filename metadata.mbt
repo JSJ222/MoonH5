@@ -3,6 +3,7 @@ pub enum Storage {
   Compact(Bytes)
   Contiguous(Int32?, Int32)
   Chunked(Int32?, Array[Int32])
+  FixedArray(Int32?, Array[Int32], Int32)
 } derive(Debug, Eq)
 
 ///|
@@ -58,7 +59,30 @@ fn decode_layout(
       }
       Chunked(root, dims)
     }
-    2 => raise Unsupported("modern chunk indexes", m.at)
+    2 => {
+      let flags = c.u8()
+      let rank = c.u8()
+      let width = c.u8()
+      if flags != 0 {
+        raise Unsupported(
+          "partial edge filtering or single-index chunk flags",
+          m.at,
+        )
+      }
+      if rank < 2 || rank - 1 > limits.max_rank {
+        raise Limit("chunk rank")
+      }
+      let dims : Array[Int32] = []
+      for i = 0; i < rank; i = i + 1 {
+        dims.push(c.index(width))
+      }
+      let kind = c.u8()
+      if kind != 3 {
+        raise Unsupported("single/implicit/extensible/Btree2 chunk index", m.at)
+      }
+      let page_bits = c.u8()
+      FixedArray(c.address(sb.offset_width, sb.base), dims, page_bits)
+    }
     _ => raise Unsupported("virtual or unknown storage", m.at)
   }
 }
@@ -167,7 +191,7 @@ pub fn H5File::dataset_info(
       if n != size {
         raise Invalid("contiguous size mismatch", 0)
       }
-    Chunked(_, dims) => {
+    Chunked(_, dims) | FixedArray(_, dims, _) => {
       guard dataspace is Simple(shape) else {
         raise Invalid("chunked non-simple dataspace", 0)
       }
