@@ -45,6 +45,14 @@ fn array_json(value : @h5.ArrayValue) -> Json raise {
 ///|
 async fn run() -> Unit {
   let args = @env.args()
+  if args.length() == 4 && args[1] == "repack" {
+    let limits = @h5.Limits::default()
+    if @fs.file_size(args[2][:]) > limits.max_file_bytes.to_int64() { raise Failure("CLI input byte limit") }
+    let file = @h5.H5File::open(@fs.read_file(args[2][:]).binary())
+    @fs.write_file(args[3][:], file.to_document().encode(), create_mode=CreateNew)
+    println("created semantically repacked HDF5 file")
+    return
+  }
   if args.length() != 3 || !["read", "write-demo"].contains(args[1]) {
     raise Failure("usage: moonh5 read FILE.h5 | write-demo NEW.h5")
   }
