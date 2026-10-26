@@ -101,6 +101,24 @@ fn encode_link(name : String, target : Int32) -> Message raise H5Error {
 }
 
 ///|
+fn encode_soft_link(name : String, target : String) -> Message raise H5Error {
+  valid_name(name)
+  let rawname = @utf8.encode(name)
+  let rawtarget = @utf8.encode(target)
+  if checked_add(rawname.length(), rawtarget.length()) > 65000 { raise Limit("soft link length") }
+  let b = buffer()
+  b.u8(1)
+  b.u8(25)
+  b.u8(1)
+  b.u8(1)
+  b.uint(rawname.length().to_uint64(), 2)
+  b.bytes(rawname)
+  b.uint(rawtarget.length().to_uint64(), 2)
+  b.bytes(rawtarget)
+  message(6, b.finish())
+}
+
+///|
 fn cstring(data : Bytes, at : Int32, end : Int32) -> String raise H5Error {
   let c = cursor(data, at, end - at)
   while c.pos < c.end {

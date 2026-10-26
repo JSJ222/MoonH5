@@ -41,14 +41,14 @@ fn Document::header(
       info.uint(0xffffffffffffffffUL, 8)
       messages.push(message(2, info.finish()))
       messages.push(message(10, b"\x00\x01\xff\xff\xff\xff"))
-      let children : Array[(String, String)] = []
+      let children : Array[(String, BuildLink)] = []
       for child in self.node_paths() {
         if child == "/" {
           continue
         }
         let (parent, name) = parent_path(child)
         if parent == path {
-          children.push((name, child))
+          children.push((name, Object(child)))
         }
       }
       for linkpath, target in self.aliases {
@@ -59,7 +59,10 @@ fn Document::header(
       }
       children.sort_by((a, b) => a.0.compare(b.0))
       for (name, target) in children {
-        messages.push(encode_link(name, addresses.get(target).unwrap_or(0)))
+        messages.push(match target {
+          Object(target) => encode_link(name, addresses.get(target).unwrap_or(0))
+          Path(target) => encode_soft_link(name, target)
+        })
       }
     }
   }
@@ -70,7 +73,7 @@ fn Document::header(
   }
   let mut references = 1
   for _, target in self.aliases {
-    if target == path {
+    if target is Object(target) && target == path {
       references += 1
     }
   }

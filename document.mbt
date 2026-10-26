@@ -6,10 +6,13 @@ struct BuildNode {
 }
 
 ///|
+enum BuildLink { Object(String); Path(String) }
+
+///|
 /// A new file model; it never modifies an existing HDF5 byte buffer in place.
 pub struct Document {
   nodes : Map[String, BuildNode]
-  aliases : Map[String, String]
+  aliases : Map[String, BuildLink]
   limits : Limits
 }
 
@@ -106,7 +109,17 @@ pub fn Document::add_hard_link(
   if !self.nodes.contains(target) {
     raise NotFound(target)
   }
-  self.aliases[path] = target
+  self.aliases[path] = Object(target)
+}
+
+///| Soft links may be dangling; writing never accesses their target.
+pub fn Document::add_soft_link(self : Document, path : String, target : String) -> Unit raise H5Error {
+  let path = canonical_path(path)
+  self.reserve(path)
+  if target == "" || target.contains("\u0000") { raise Invalid("invalid soft link target", 0) }
+  let (_, name) = parent_path(path)
+  ignore(encode_soft_link(name, target))
+  self.aliases[path] = Path(target)
 }
 
 ///|
