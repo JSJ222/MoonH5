@@ -31,7 +31,7 @@ fn array_json(value : @h5.ArrayValue) -> Json raise {
 }
 
 ///|
-async fn main {
+async fn run() -> Unit raise {
   let args = @env.args()
   if args.length() != 3 || !["read", "write-demo"].contains(args[1]) {
     raise Failure("usage: moonh5 read FILE.h5 | write-demo NEW.h5")
@@ -61,5 +61,16 @@ async fn main {
       entries.push(Json::object(object))
     }
     println(Json::array(entries).stringify())
+  }
+}
+
+///|
+async fn main {
+  try run() catch {
+    @h5.H5Error::Invalid(message, offset) => raise Failure("invalid HDF5 at byte \{offset}: \{message}")
+    @h5.H5Error::Unsupported(message, offset) => raise Failure("unsupported HDF5 at byte \{offset}: \{message}")
+    @h5.H5Error::Limit(message) => raise Failure("HDF5 resource limit: \{message}")
+    @h5.H5Error::NotFound(path) => raise Failure("HDF5 object not found: \{path}")
+    error => raise error
   }
 }
