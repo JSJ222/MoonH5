@@ -49,7 +49,8 @@ fn Limits::validate(self : Limits) -> Unit raise H5Error {
     self.max_metadata_bytes < 0 ||
     self.max_objects <= 0 ||
     self.max_depth <= 0 ||
-    self.max_rank <= 0 {
+    self.max_rank <= 0 ||
+    self.max_rank > 32 {
     raise Invalid("negative or empty resource limit", 0)
   }
 }

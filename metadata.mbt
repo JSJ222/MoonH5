@@ -90,6 +90,16 @@ fn decode_layout(
 ///|
 fn decode_fill(m : Message, width : Int32) -> Bytes raise H5Error {
   let c = cursor(m.bytes, 0, m.bytes.length())
+  if m.kind == 4 {
+    let size = c.index(4)
+    if size == 0 {
+      return Bytes::from_array(Array::make(width, 0))
+    }
+    if size != width {
+      raise Invalid("legacy fill size differs from datatype", m.at)
+    }
+    return c.bytes(size)
+  }
   let version = c.u8()
   let defined = match version {
     1 | 2 => {
@@ -134,9 +144,16 @@ pub fn H5File::dataset_info(
   let mut space : Dataspace? = None
   let mut storage : Storage? = None
   let mut fill_message : Message? = None
+  let mut old_fill_message : Message? = None
   for m in messages {
     let c = cursor(m.bytes, 0, m.bytes.length())
     match m.kind {
+      4 => {
+        if old_fill_message is Some(_) {
+          raise Invalid("duplicate old fill value", m.at)
+        }
+        old_fill_message = Some(m)
+      }
       1 => {
         if space != None {
           raise Invalid("duplicate dataspace", m.at)
@@ -210,7 +227,11 @@ pub fn H5File::dataset_info(
       }
     }
   }
-  let fill = match fill_message {
+  let chosen_fill = match fill_message {
+    Some(_) => fill_message
+    None => old_fill_message
+  }
+  let fill = match chosen_fill {
     Some(m) => decode_fill(m, width)
     None => Bytes::from_array(Array::make(width, 0))
   }
