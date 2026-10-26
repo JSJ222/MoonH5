@@ -16,7 +16,7 @@ fn Document::header(self : Document, path : String, addresses : Map[String, Int]
         layout.bytes(value.raw)
       } else {
         layout.u8(1)
-        layout.uint(raw_addresses.get(path).unwrap_or(0).to_uint64(), 8)
+        layout.uint(if value.raw.length() == 0 { 0xffffffffffffffffUL } else { raw_addresses.get(path).unwrap_or(0).to_uint64() }, 8)
         layout.uint(value.raw.length().to_uint64(), 8)
       }
       messages.push(message(8, layout.finish()))
