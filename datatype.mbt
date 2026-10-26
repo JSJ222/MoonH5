@@ -1,19 +1,19 @@
 ///|
-pub enum ByteOrder { Little; Big } derive(Debug, Eq)
+pub(all) enum ByteOrder { Little; Big } derive(Debug, Eq)
 ///|
 pub extend ByteOrder with @debug.Debug::{to_repr}
 ///|
 pub extend ByteOrder with Eq::{equal, not_equal}
 
 ///|
-pub enum StringPadding { NullTerminated; NullPadded; SpacePadded } derive(Debug, Eq)
+pub(all) enum StringPadding { NullTerminated; NullPadded; SpacePadded } derive(Debug, Eq)
 ///|
 pub extend StringPadding with @debug.Debug::{to_repr}
 ///|
 pub extend StringPadding with Eq::{equal, not_equal}
 
 ///| Only fixed-size atomic types belong to the initial profile.
-pub enum DataType {
+pub(all) enum DataType {
   Signed(Int, ByteOrder)
   Unsigned(Int, ByteOrder)
   Float(Int, ByteOrder)

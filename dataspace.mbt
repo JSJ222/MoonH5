@@ -1,5 +1,5 @@
 ///|
-pub enum Dataspace {
+pub(all) enum Dataspace {
   Scalar
   Simple(Array[Int])
   Null
