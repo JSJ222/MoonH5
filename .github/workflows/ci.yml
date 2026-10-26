@@ -1,0 +1,46 @@
+name: check-build-test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install official MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Check build and test all backends
+        run: |
+          moon version --all
+          moon check --target all --deny-warn
+          moon build --target all --deny-warn
+          moon test --target all --deny-warn
+      - name: Format and public API
+        run: |
+          moon fmt --check
+          moon info
+          git diff --exit-code
+      - name: Reproduce application scenarios
+        run: |
+          moon run examples/instrument --target native --deny-warn
+          moon run examples/simulation --target native --deny-warn
+          moon run examples/training --target native --deny-warn
+          moon run examples/scale --target native --release --deny-warn
+      - name: Independent h5py oracle
+        run: |
+          python -m pip install -r scripts/requirements-interop.txt
+          moon build --target native --deny-warn
+          python scripts/interop.py verify _build/native/debug/build/cmd/main/main.exe
+      - name: Publication hygiene and real source scale
+        run: python scripts/verify_repository.py

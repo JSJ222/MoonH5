@@ -5,6 +5,10 @@ compared in a later check step; h5py is never a runtime dependency.
 """
 from pathlib import Path
 import argparse
+import json
+import math
+import subprocess
+import tempfile
 import h5py
 import numpy as np
 
@@ -56,9 +60,78 @@ def check(path):
     print("h5py independently read MoonH5 groups, values, aliases, attributes, and empty/null arrays")
 
 
+def verify(cli):
+    """Run the actual native executable; compare every emitted value with h5py."""
+    cli = cli.resolve()
+
+    def run(*args, success=True):
+        result = subprocess.run([str(cli), *map(str, args)], capture_output=True, text=True, encoding="utf-8")
+        if success and result.returncode:
+            raise AssertionError(result.stdout + result.stderr)
+        if not success and result.returncode == 0:
+            raise AssertionError("invalid operation unexpectedly succeeded")
+        return result.stdout
+
+    def check_array(actual, expected):
+        if isinstance(expected, h5py.Empty):
+            assert actual["shape"] is None and actual["values"] == []
+            return
+        expected = np.asarray(expected)
+        assert actual["shape"] == list(expected.shape)
+        assert len(actual["values"]) == expected.size
+        for a, e in zip(actual["values"], expected.reshape(-1)):
+            if expected.dtype.kind in "iu":
+                assert int(a) == int(e)
+            elif expected.dtype.kind == "f":
+                if math.isnan(float(e)):
+                    assert a == "NaN"
+                elif math.isinf(float(e)):
+                    assert a == ("-Infinity" if e < 0 else "Infinity")
+                else:
+                    assert float(a) == float(e)
+                    if e == 0:
+                        assert math.copysign(1., float(a)) == math.copysign(1., float(e))
+            else:
+                assert a == bytes(e).decode("utf-8")
+
+    with tempfile.TemporaryDirectory(prefix="moonh5-oracle-") as temp:
+        directory = Path(temp)
+        generate(directory)
+        for name in ("earliest", "v108", "latest", "edge"):
+            source = directory / f"{name}.h5"
+            inventory = json.loads(run("read", source))
+            with h5py.File(source, "r") as f:
+                for entry in inventory:
+                    obj = f[entry["path"]]
+                    if "data" in entry:
+                        check_array(entry["data"], obj[()])
+                    for attribute in entry["attributes"]:
+                        check_array(attribute["value"], obj.attrs[attribute["name"]])
+            target = directory / f"{name}-repacked.h5"
+            run("repack", source, target)
+            with h5py.File(source, "r") as old, h5py.File(target, "r") as new:
+                for entry in inventory:
+                    if "data" in entry:
+                        if old[entry["path"]].shape is None:
+                            assert new[entry["path"]].shape is None
+                        else:
+                            np.testing.assert_array_equal(old[entry["path"]][()], new[entry["path"]][()])
+                if name != "edge":
+                    assert new["same"].id == new["run/samples"].id
+                    assert isinstance(new.get("relative", getlink=True), h5py.SoftLink)
+        written = directory / "moon-written.h5"
+        run("write-demo", written)
+        check(written)
+        before = written.read_bytes()
+        run("write-demo", written, success=False)
+        assert written.read_bytes() == before
+        run("read", directory / "unsupported.h5", success=False)
+    print("PASS: h5py bidirectional values, repacking, aliases, attributes, errors, and no-overwrite checks")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["generate", "check"])
+    parser.add_argument("action", choices=["generate", "check", "verify"])
     parser.add_argument("path", type=Path)
     args = parser.parse_args()
-    (generate if args.action == "generate" else check)(args.path)
+    {"generate": generate, "check": check, "verify": verify}[args.action](args.path)
