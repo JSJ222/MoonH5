@@ -61,6 +61,7 @@ fn decode_fill(m : Message, width : Int) -> Bytes raise H5Error {
   }
   if !defined { return Bytes::from_array(Array::make(width, 0)) }
   let size = c.index(4)
+  if size == 0 { return Bytes::from_array(Array::make(width, 0)) }
   if size != width { raise Invalid("fill size differs from datatype", m.at) }
   c.bytes(size)
 }
