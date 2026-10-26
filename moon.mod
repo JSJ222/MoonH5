@@ -8,4 +8,5 @@ keywords = [ "hdf5", "arrays", "scientific-data" ]
 preferred_target = "wasm-gc"
 import {
   "moonbitlang/async@0.22.5",
+  "moonbit-community/flate@0.10.0",
 }

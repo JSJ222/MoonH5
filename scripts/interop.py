@@ -23,6 +23,9 @@ def generate(directory):
             f.create_dataset("fill", shape=(2, 3), dtype="i2", fillvalue=-7)
             f["same"] = g["samples"]
             f["relative"] = h5py.SoftLink("run/samples")
+            if bound != "latest":
+                g.create_dataset("chunked", data=np.arange(35, dtype="i2").reshape(5, 7), chunks=(2, 3))
+                g.create_dataset("filtered", data=np.arange(35, dtype=">i4").reshape(5, 7), chunks=(2, 3), compression="gzip", shuffle=True, fletcher32=True)
     print("generated 3 original h5py interoperability fixtures")
 
 
