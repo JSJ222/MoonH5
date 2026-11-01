@@ -4,11 +4,11 @@
 
 适合仪器数据交换、仿真结果切片、固定形状训练数据和参数数组，以及 Web/WASM 中的离线科学数据处理。它不是完整 HDF5 实现，也不自动保证兼容 MATLAB v7.3、NetCDF-4、Keras 等上层格式。
 
-当前为本地预发布：模块 `local/moonh5`、`private = true`，尚无公开安装地址。账号由所有者确定后才会改名、推送与发布；现在不要运行 `moon add local/moonh5`。
+模块：`JSJ222/moonh5@0.1.0`；[GitHub](https://github.com/JSJ222/MoonH5) · [Mooncakes](https://mooncakes.io/docs/JSJ222/moonh5)。
 
 ## 安装与复现
 
-安装 [官方 MoonBit 工具链](https://docs.moonbitlang.com/en/latest/download-and-install.html)，推荐使用已验证的 `moonc 0.10.16` 或兼容新版本。进入此项目目录后：
+安装 [官方 MoonBit 工具链](https://docs.moonbitlang.com/en/latest/download-and-install.html)，已验证 `moonc 0.10.16`，CI 固定 compiler/core 0.10.16+b1a0e846e。进入此项目目录后：
 
 ```sh
 moon version --all
@@ -33,7 +33,13 @@ moon run examples/scale --target native --release
 
 ## 最小 API 示例
 
-下列用法已在 `examples/instrument` 中实际执行；应用包导入模块并将别名设置为 `h5`。
+在已有 MoonBit 工程中安装：
+
+```sh
+moon add JSJ222/moonh5@0.1.0
+```
+
+在使用方 `moon.pkg` 中配置 `import { "JSJ222/moonh5" @h5, }`；以下代码可直接运行，完整场景见 `examples/instrument`。
 
 ```moonbit
 fn main raise {
@@ -83,7 +89,7 @@ moon run cmd/main --target native -- repack INPUT.h5 NEW.h5
 
 ## 测试与互操作
 
-`moon test --target all --deny-warn` 包含原子类型边界、规则块选择、损坏/截断、资源限制、链接环、独立 h5py 样例、稀疏/边界分块与过滤器回归。检查、构建、测试、格式、公共 API 和实际场景均配置在 GitHub Actions；远程运行结果需公开推送后才能确认。
+`moon test --target all --deny-warn` 包含原子类型边界、规则块选择、损坏/截断、资源限制、链接环、独立 h5py 样例、稀疏/边界分块与过滤器回归。[Linux/Windows GitHub Actions](https://github.com/JSJ222/MoonH5/actions) 覆盖四后端检查、构建、测试、格式、公共 API、五个场景、独立互操作与打包卫生；工程检查不等于正式赛事验收。
 
 独立双向对照（Python 仅用于开发测试，不是库运行依赖）：
 
@@ -108,9 +114,9 @@ Windows 使用 `_local\venv\Scripts\python.exe`，Moon 命令可改为上述 Win
 
 核心按 [HDF Group 文件格式规范](https://portal.hdfgroup.org/documentation/hdf5/latest/_f_m_t3.html) 独立实现，不是 pyfive/jsfive 的代码移植；元数据 lookup3 算法来源与依赖见 [THIRD_PARTY.md](THIRD_PARTY.md)。核心 MIT，复用的 Windows 工具保留 Apache-2.0。开发使用 AI 辅助，代码行为由测试和独立工具检验；使用者仍需根据实际数据与风险验证兼容性。
 
-领域词汇见 `CONTEXT.md`，设计取舍见 `docs/adr/`，公开接口见 `pkg.generated.mbti`。后续优先维护真实互操作缺陷；新编码需独立 fixture 和明确边界后才加入。申报书、审查与 AI 辅助材料不属于公共工程文档，统一留在被忽略的 `_local/` 或仓库之外。
+领域词汇见 `CONTEXT.md`，设计取舍见 `docs/adr/`，公开接口见 `pkg.generated.mbti`。后续优先维护真实互操作缺陷；新编码需独立 fixture 和明确边界后才加入。申报书、审查与 AI 辅助材料不属于公共工程文档，可在项目本地文件夹保存，通过忽略及历史/包检查排除，不进入 Git 或发行包。
 
 
 ## 十一月新增功能
 
-**多维轴置换**（`ArrayValue::transpose`）；**兼容数组按轴拼接**（`ArrayValue::concat_axis`）。详见[功能、用途和边界](docs/NOVEMBER_FEATURES.md)，运行 `moon run examples/november --target native --deny-warn`。当前仍为本地未发布源码，不提供虚构安装地址。
+**多维轴置换**（`ArrayValue::transpose`）；**兼容数组按轴拼接**（`ArrayValue::concat_axis`）。详见[功能、用途和边界](docs/NOVEMBER_FEATURES.md)，运行 `moon run examples/november --target native --deny-warn`。功能包含于0.1.0，安装方式见上文。

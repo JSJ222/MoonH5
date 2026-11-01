@@ -1,12 +1,12 @@
-name = "local/moonh5"
+name = "JSJ222/moonh5"
 
 version = "0.1.0"
-
-private = true
 
 license = "MIT"
 
 readme = "README.md"
+
+repository = "https://github.com/JSJ222/MoonH5"
 
 description = "Bounded pure MoonBit HDF5 array interchange and hyperslab access"
 
