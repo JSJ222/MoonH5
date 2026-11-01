@@ -1,9 +1,9 @@
 ///|
 /// Immutable byte storage; shape accessors return defensive copies.
 pub struct ArrayValue {
-  dtype : DataType
-  space : Dataspace
-  raw : Bytes
+  priv dtype : DataType
+  priv space : Dataspace
+  priv raw : Bytes
 } derive(Debug)
 
 ///|

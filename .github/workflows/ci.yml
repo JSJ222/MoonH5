@@ -44,3 +44,6 @@ jobs:
           python scripts/interop.py verify _build/native/debug/build/cmd/main/main.exe
       - name: Publication hygiene and real source scale
         run: python scripts/verify_repository.py
+
+      - name: November integration scenario
+        run: moon run examples/november --target native --deny-warn

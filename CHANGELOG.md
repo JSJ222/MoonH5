@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — 2026-11-01
+
+- 多维轴置换：ArrayValue::transpose
+- 兼容数组按轴拼接：ArrayValue::concat_axis
+- 增加边界回归、可运行集成示例和CI步骤；未公开发布。
+
 ## 0.1.0 — local prerelease
 
 - Bounded HDF5 superblocks, object headers, legacy and compact group links.

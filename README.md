@@ -109,3 +109,8 @@ Windows 使用 `_local\venv\Scripts\python.exe`，Moon 命令可改为上述 Win
 核心按 [HDF Group 文件格式规范](https://portal.hdfgroup.org/documentation/hdf5/latest/_f_m_t3.html) 独立实现，不是 pyfive/jsfive 的代码移植；元数据 lookup3 算法来源与依赖见 [THIRD_PARTY.md](THIRD_PARTY.md)。核心 MIT，复用的 Windows 工具保留 Apache-2.0。开发使用 AI 辅助，代码行为由测试和独立工具检验；使用者仍需根据实际数据与风险验证兼容性。
 
 领域词汇见 `CONTEXT.md`，设计取舍见 `docs/adr/`，公开接口见 `pkg.generated.mbti`。后续优先维护真实互操作缺陷；新编码需独立 fixture 和明确边界后才加入。申报书、审查与 AI 辅助材料不属于公共工程文档，统一留在被忽略的 `_local/` 或仓库之外。
+
+
+## 十一月新增功能
+
+**多维轴置换**（`ArrayValue::transpose`）；**兼容数组按轴拼接**（`ArrayValue::concat_axis`）。详见[功能、用途和边界](docs/NOVEMBER_FEATURES.md)，运行 `moon run examples/november --target native --deny-warn`。当前仍为本地未发布源码，不提供虚构安装地址。

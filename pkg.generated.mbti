@@ -21,11 +21,10 @@ pub fn H5Error::to_repr(Self) -> @debug.Repr
 
 // Types and methods
 pub struct ArrayValue {
-  dtype : DataType
-  space : Dataspace
-  raw : Bytes
+  // private fields
 } derive(@debug.Debug)
 pub fn ArrayValue::bytes(Self) -> Bytes
+pub fn ArrayValue::concat_axis(Self, Self, Int32, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::dataspace(Self) -> Dataspace
 pub fn ArrayValue::datatype(Self) -> DataType
 pub fn ArrayValue::float_at(Self, Int32) -> Double raise H5Error
@@ -39,6 +38,7 @@ pub fn ArrayValue::select(Self, Selection) -> Self raise H5Error
 pub fn ArrayValue::signed_at(Self, Int32) -> Int64 raise H5Error
 pub fn ArrayValue::string_at(Self, Int32) -> String raise H5Error
 pub fn ArrayValue::to_repr(Self) -> @debug.Repr
+pub fn ArrayValue::transpose(Self, Array[Int32], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::unsigned_at(Self, Int32) -> UInt64 raise H5Error
 pub fn ArrayValue::with_byte_order(Self, ByteOrder) -> Self raise H5Error
 pub fn ArrayValue::with_selection(Self, Selection, Self) -> Self raise H5Error
