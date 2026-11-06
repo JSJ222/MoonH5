@@ -40,6 +40,10 @@ pub fn ArrayValue::with_byte_order(
     Unsigned(width, old) => (Unsigned(width, order), old)
     Float(width, old) => (Float(width, order), old)
     FixedString(_, _, _) => return self
+    Compound(_, _) | ArrayType(_, _) | EnumType(_, _) =>
+      raise Unsupported(
+        "use field/base projection for structured byte-order conversion", 0,
+      )
   }
   if old == order {
     return self

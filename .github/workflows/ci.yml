@@ -62,10 +62,12 @@ jobs:
           moon run examples/scale --target native --release --deny-warn
           moon run examples/november --target native --deny-warn
           moon run examples/expansion --target native --deny-warn
+          moon run examples/structured_exchange --target native --deny-warn
       - name: Independent h5py oracle
         run: |
           python -m pip install -r scripts/requirements-interop.txt
           python scripts/interop.py verify _build/native/debug/build/cmd/main/main.exe
+          python scripts/interop_format.py _build/native/debug/build/cmd/main/main.exe
       - name: Package and source hygiene
         run: |
           moon package

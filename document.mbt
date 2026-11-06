@@ -17,6 +17,7 @@ pub struct Document {
   nodes : Map[String, BuildNode]
   aliases : Map[String, BuildLink]
   limits : Limits
+  chunk_options : Map[String, ChunkOptions]
 }
 
 ///|
@@ -27,6 +28,7 @@ pub fn Document::new(
   {
     nodes: Map([("/", { value: None, compact: false, attributes: [], })]),
     aliases: Map([]),
+    chunk_options: Map([]),
     limits,
   }
 }
@@ -87,6 +89,7 @@ pub fn Document::add_dataset(
   path : String,
   value : ArrayValue,
   compact~ : Bool = false,
+  chunked~ : ChunkOptions? = None,
 ) -> Unit raise H5Error {
   let path = canonical_path(path)
   self.reserve(path)
@@ -96,7 +99,41 @@ pub fn Document::add_dataset(
   if compact && value.raw.length() > 65000 {
     raise Limit("compact data must fit a header message")
   }
+  if chunked is Some(options) {
+    if compact {
+      raise Invalid("compact and chunked storage are mutually exclusive", 0)
+    }
+    options.validate(value, self.limits)
+    self.chunk_options[path] = { ..options, shape: options.shape.copy(), }
+  }
   self.nodes[path] = { value: Some(value), compact, attributes: [], }
+}
+
+///|
+/// Set chunked output on a real dataset path, or None for contiguous output.
+/// Validates before changing the document. Existing source bytes are untouched.
+pub fn Document::set_chunking(
+  self : Document,
+  path : String,
+  options : ChunkOptions?,
+) -> Unit raise H5Error {
+  let path = canonical_path(path)
+  let node = match self.nodes.get(path) {
+    Some(n) => n
+    None => raise NotFound(path)
+  }
+  let value = match node.value {
+    Some(v) => v
+    None => raise Invalid("chunking requires dataset", 0)
+  }
+  match options {
+    Some(o) => {
+      o.validate(value, self.limits)
+      self.chunk_options[path] = { ..o, shape: o.shape.copy(), }
+    }
+    None => ignore(self.chunk_options.remove(path))
+  }
+  self.nodes[path] = { ..node, compact: false, }
 }
 
 ///|

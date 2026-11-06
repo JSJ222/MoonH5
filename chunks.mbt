@@ -22,6 +22,10 @@ fn H5File::chunk_index(
   self : H5File,
   info : DatasetInfo,
 ) -> Array[ChunkInfo] raise H5Error {
+  if info.storage is SingleChunk(_, _, _, _) ||
+    info.storage is ImplicitChunks(_, _) {
+    return self.direct_chunks(info)
+  }
   if info.storage is FixedArray(_, _, _) {
     return self.fixed_array_chunks(info)
   }
@@ -125,13 +129,19 @@ fn H5File::read_chunked_selection(
   selection : Selection,
 ) -> ArrayValue raise H5Error {
   let dims = match info.storage {
-    Chunked(_, dims) | FixedArray(_, dims, _) => dims
+    Chunked(_, dims)
+    | FixedArray(_, dims, _)
+    | SingleChunk(_, dims, _, _)
+    | ImplicitChunks(_, dims) => dims
     _ => raise Invalid("not chunked", 0)
   }
   guard info.dataspace is Simple(shape) else {
     raise Invalid("chunked scalar/null", 0)
   }
   let filters = self.filters(path)
+  if info.storage is ImplicitChunks(_, _) && !filters.is_empty() {
+    raise Invalid("implicit chunk index cannot have filters", 0)
+  }
   let chunks = self.chunk_index(info)
   let indexed : Map[String, ChunkInfo] = Map([])
   for chunk in chunks {

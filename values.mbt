@@ -24,12 +24,12 @@ pub fn ArrayValue::new(
   if raw.length() != size {
     raise Invalid("array byte length differs from extent", 0)
   }
-  { dtype, space: space.copy(), raw, }
+  { dtype: dtype.detached(), space: space.copy(), raw, }
 }
 
 ///|
 pub fn ArrayValue::datatype(self : ArrayValue) -> DataType {
-  self.dtype
+  self.dtype.detached()
 }
 
 ///|

@@ -1,6 +1,6 @@
 name = "JSJ222/moonh5"
 
-version = "0.1.0"
+version = "0.2.0"
 
 license = "MIT"
 
@@ -8,7 +8,7 @@ readme = "README.md"
 
 repository = "https://github.com/JSJ222/MoonH5"
 
-description = "Bounded pure MoonBit HDF5 array interchange and hyperslab access"
+description = "Pure MoonBit HDF5 structured data, compressed chunks and hyperslab exchange"
 
 keywords = [ "hdf5", "arrays", "scientific-data" ]
 

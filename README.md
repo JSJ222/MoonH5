@@ -4,7 +4,7 @@
 
 适合仪器数据交换、仿真结果切片、固定形状训练数据和参数数组，以及 Web/WASM 中的离线科学数据处理。它不是完整 HDF5 实现，也不自动保证兼容 MATLAB v7.3、NetCDF-4、Keras 等上层格式。
 
-模块：`JSJ222/moonh5@0.1.0`；[GitHub](https://github.com/JSJ222/MoonH5) · [Mooncakes](https://mooncakes.io/docs/JSJ222/moonh5)。
+模块：`JSJ222/moonh5@0.2.0`；[GitHub](https://github.com/JSJ222/MoonH5) · [Mooncakes](https://mooncakes.io/docs/JSJ222/moonh5)。
 
 ## 安装与复现
 
@@ -36,7 +36,7 @@ moon run examples/scale --target native --release
 在已有 MoonBit 工程中安装：
 
 ```sh
-moon add JSJ222/moonh5@0.1.0
+moon add JSJ222/moonh5@0.2.0
 ```
 
 在使用方 `moon.pkg` 中配置 `import { "JSJ222/moonh5" @h5, }`；以下代码可直接运行，完整场景见 `examples/instrument`。
@@ -59,7 +59,20 @@ fn main raise {
 }
 ```
 
-`ArrayValue::new` 接收定宽原始字节和显式字节序；`from_signed/from_unsigned/from_floats` 分别产生 64 位数据。定宽 UTF-8 字符串按字节宽度校验，不截断字符。`with_byte_order` 只交换字节序，保留 NaN payload 和整数全部位；`with_selection` 返回新数组，不修改输入。
+`ArrayValue::new` 接收定宽原始字节和显式字节序；结构类型提供 `field/expand_array/enum_base/enum_name_at` 访问。`from_signed/from_unsigned/from_floats` 分别产生 64 位数据。定宽 UTF-8 字符串按字节宽度校验，不截断字符。原子类型的 `with_byte_order` 只交换字节序，保留 NaN payload 和整数全部位；结构类型需按字段处理大小端。`with_selection` 返回新数组，不修改输入。
+
+## 0.2.0 标准格式能力
+
+本轮优先补强结构化类型、标准分块索引及压缩写出：
+
+- **Compound／Array／Enum**：嵌套定宽记录、记录内数组、枚举、结构化属性；保留字段名称、偏移、类型、大小端和完整整数。
+- **分块压缩写出**：标准 fixed-array 索引、gzip／shuffle／Fletcher32 组合，支持边界块和确定性输出。
+- **现代索引读取**：增加 single-chunk（含过滤器）和 early-allocated implicit 索引。
+- **压缩重打包**：可通过 `Document::set_chunking` 指定存储，CLI 提供 `repack-compressed`。
+
+运行 `moon run examples/structured_exchange --target native --deny-warn`；
+独立验证为 `python scripts/interop_format.py _build/native/debug/build/cmd/main/main.exe`。
+上述能力从0.2.0起提供。详见[版本化能力边界、复杂度和后续格式路线](docs/FORMAT_COVERAGE.md)。
 
 ## 兼容范围
 
@@ -67,11 +80,11 @@ fn main raise {
 | --- | --- | --- |
 | 文件 | superblock 0/1/2/3、标准 user block、2/4/8 字节地址/长度；v2/3 校验和 | SWMR/活动写入、多文件驱动、superblock 扩展 |
 | 对象与组 | v1/v2 对象头与继续块；旧符号表、compact links；硬链接别名/环和软链接 | dense groups/fractal heaps、外部链接、共享/提交类型 |
-| 数组 | scalar、simple、null 和零长度维；连续、紧凑、旧 v1 B-tree 分块；现代未分页 fixed-array 分块 | paged fixed-array、single/implicit/extensible/v2 B-tree 索引、VDS、resize |
-| 类型 | 8/16/32/64 位整数、IEEE32/64、定长 ASCII/UTF-8；大小端 | VLEN、compound、enum、reference、opaque、非标准浮点 |
+| 数组 | scalar、simple、null 和零长度维；连续、紧凑、旧 v1 B-tree 分块；现代未分页 fixed-array、single、implicit 分块 | paged fixed-array、extensible/v2 B-tree 索引、VDS、resize |
+| 类型 | 8/16/32/64 位整数、IEEE32/64、定长 ASCII/UTF-8、嵌套 compound、定长 array、整数 enum；大小端 | VLEN、reference、opaque、原生 class-11 complex、非标准浮点 |
 | 属性 | 内联 v1/v2/v3 定宽数组属性 | dense/shared 属性 |
 | 过滤器 | gzip（实际为 zlib 封装 DEFLATE）、shuffle、Fletcher32；逐块 filter mask | LZF、SZIP、插件、scale-offset；部分边界块跳过滤器布局标志 |
-| 写出 | 新建确定性 superblock2/object-header2、compact groups、连续/紧凑定宽数组、属性、硬/软链接 | 分块/压缩写出、就地修改、保留未知消息或物理布局 |
+| 写出 | 新建确定性 superblock2/object-header2、compact groups、连续/紧凑及固定范围分块数组、gzip/shuffle/Fletcher32、结构化属性、硬/软链接 | 空/可扩展分块写出、就地修改、保留未知消息或物理布局 |
 
 fixed-array 仅接受当前网格与索引最大网格一致的未分页索引。superblock1 解析入口存在，但独立 h5py 样例主要验证 0/2/3；不将入口存在等同于任意变体均验证。文件打开只验证入口及根对象，其余对象按访问校验。
 
@@ -83,9 +96,11 @@ fixed-array 仅接受当前网格与索引最大网格一致的未分页索引�
 moon run cmd/main --target native -- write-demo NEW.h5
 moon run cmd/main --target native -- read INPUT.h5
 moon run cmd/main --target native -- repack INPUT.h5 NEW.h5
+moon run cmd/main --target native -- repack-compressed INPUT.h5 NEW.h5
+moon run cmd/main --target native -- write-format NEW.h5
 ```
 
-写入均使用 `CreateNew`，不会覆盖已有文件。`read` 输出 JSON 清单及数组值，适合小文件检验；整数使用十进制字符串，非有限浮点及负零使用字符串，避免 JSON 丢失语义。大数组请使用库的选择 API，而不是输出全部 JSON。文件读取由调用方负责；库接受内存字节，不会自行访问网络、外部文件或软链接指向的操作系统路径。
+写入均使用 `CreateNew`，不会覆盖已有文件。`read` 输出 JSON 清单及数组值；结构元素输出原始字节数组，可通过类型化 API 解释，适合小文件检验；整数使用十进制字符串，非有限浮点及负零使用字符串，避免 JSON 丢失语义。大数组请使用库的选择 API，而不是输出全部 JSON。文件读取由调用方负责；库接受内存字节，不会自行访问网络、外部文件或软链接指向的操作系统路径。
 
 ## 测试与互操作
 
@@ -122,8 +137,8 @@ Windows 使用 `_local\venv\Scripts\python.exe`，Moon 命令可改为上述 Win
 **多维轴置换**（`ArrayValue::transpose`）；**兼容数组按轴拼接**（`ArrayValue::concat_axis`）。详见[功能、用途和边界](docs/NOVEMBER_FEATURES.md)，运行 `moon run examples/november --target native --deny-warn`。功能包含于0.1.0，安装方式见上文。
 
 
-## 本地开发增量（未发布）
+## 0.2.0 数组适配扩展
 
 新增 **无损形状重排**、**有序轴采样 gather**，用途、限制和复杂度见 [功能文档](docs/EXPANSION_20261106.md)。
 从本仓库源码运行 `moon run examples/expansion --target native --deny-warn`。
-本节 API 尚未包含在已发布的 0.1.0 中。
+本节 API 从0.2.0起提供。

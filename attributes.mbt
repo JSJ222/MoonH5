@@ -74,7 +74,9 @@ fn encode_attribute(
   let rawname = @utf8.encode(name)
   let dtype = attribute.value.dtype.encode()
   let space = attribute.value.space.encode(limits)
-  if rawname.length() > 65534 ||
+  if dtype.length() > 65535 ||
+    space.length() > 65535 ||
+    rawname.length() > 65534 ||
     attribute.value.raw.length() > limits.max_metadata_bytes {
     raise Limit("attribute length")
   }

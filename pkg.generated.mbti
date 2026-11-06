@@ -27,6 +27,11 @@ pub fn ArrayValue::bytes(Self) -> Bytes
 pub fn ArrayValue::concat_axis(Self, Self, Int32, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::dataspace(Self) -> Dataspace
 pub fn ArrayValue::datatype(Self) -> DataType
+pub fn ArrayValue::element(Self, Int32) -> Self raise H5Error
+pub fn ArrayValue::enum_base(Self, limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::enum_name_at(Self, Int32) -> String? raise H5Error
+pub fn ArrayValue::expand_array(Self, limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::field(Self, String, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::float_at(Self, Int32) -> Double raise H5Error
 pub fn ArrayValue::from_floats(Dataspace, Array[Double], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::from_signed(Dataspace, Array[Int64], limits? : Limits) -> Self raise H5Error
@@ -83,11 +88,31 @@ pub fn ChunkInfo::equal(Self, Self) -> Bool
 pub fn ChunkInfo::not_equal(Self, Self) -> Bool
 pub fn ChunkInfo::to_repr(Self) -> @debug.Repr
 
+pub(all) struct ChunkOptions {
+  shape : Array[Int32]
+  gzip : Int32?
+  shuffle : Bool
+  fletcher32 : Bool
+}
+pub fn ChunkOptions::new(Array[Int32], gzip? : Int32?, shuffle? : Bool, fletcher32? : Bool) -> Self
+
+pub(all) struct CompoundMember {
+  name : String
+  offset : Int32
+  datatype : DataType
+} derive(Eq, @debug.Debug)
+pub fn CompoundMember::equal(Self, Self) -> Bool
+pub fn CompoundMember::not_equal(Self, Self) -> Bool
+pub fn CompoundMember::to_repr(Self) -> @debug.Repr
+
 pub(all) enum DataType {
   Signed(Int32, ByteOrder)
   Unsigned(Int32, ByteOrder)
   Float(Int32, ByteOrder)
   FixedString(Int32, StringPadding, Bool)
+  Compound(Int32, Array[CompoundMember])
+  ArrayType(Array[Int32], DataType)
+  EnumType(DataType, Array[(String, Bytes)])
 } derive(Eq, @debug.Debug)
 pub fn DataType::equal(Self, Self) -> Bool
 pub fn DataType::not_equal(Self, Self) -> Bool
@@ -116,14 +141,16 @@ pub struct Document {
   nodes : Map[String, BuildNode]
   aliases : Map[String, BuildLink]
   limits : Limits
+  chunk_options : Map[String, ChunkOptions]
 }
-pub fn Document::add_dataset(Self, String, ArrayValue, compact? : Bool) -> Unit raise H5Error
+pub fn Document::add_dataset(Self, String, ArrayValue, compact? : Bool, chunked? : ChunkOptions?) -> Unit raise H5Error
 pub fn Document::add_group(Self, String) -> Unit raise H5Error
 pub fn Document::add_hard_link(Self, String, String) -> Unit raise H5Error
 pub fn Document::add_soft_link(Self, String, String) -> Unit raise H5Error
 pub fn Document::encode(Self) -> Bytes raise H5Error
 pub fn Document::new(limits? : Limits) -> Self raise H5Error
 pub fn Document::set_attribute(Self, String, String, ArrayValue) -> Unit raise H5Error
+pub fn Document::set_chunking(Self, String, ChunkOptions?) -> Unit raise H5Error
 
 pub(all) struct FilterInfo {
   id : Int32
@@ -215,6 +242,8 @@ pub enum Storage {
   Contiguous(Int32?, Int32)
   Chunked(Int32?, Array[Int32])
   FixedArray(Int32?, Array[Int32], Int32)
+  SingleChunk(Int32?, Array[Int32], Int32?, UInt32)
+  ImplicitChunks(Int32?, Array[Int32])
 } derive(Eq, @debug.Debug)
 pub fn Storage::equal(Self, Self) -> Bool
 pub fn Storage::not_equal(Self, Self) -> Bool

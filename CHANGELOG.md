@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased — 2026-11-06
+## 0.2.0 — 2026-11-06
+
+- Add recursive fixed-width compound, array and integer enum datatypes, structured attributes and field/base projection APIs with descriptor isolation and budgets.
+- Add standard chunked writing via unpaged fixed-array indexes, zlib/DEFLATE + shuffle + Fletcher32 pipelines, edge padding and explicit compressed repacking.
+- Read modern single-chunk and early-allocated implicit indexes; add independent h5py/HDF5 typed roundtrips and format expansion roadmap.
 
 - 无损形状重排。
 - 有序轴采样 gather。

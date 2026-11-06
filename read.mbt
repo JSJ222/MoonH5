@@ -52,7 +52,10 @@ pub fn H5File::read(self : H5File, path : String) -> ArrayValue raise H5Error {
         info.dataspace.elements(limits=self.limits),
         self.limits,
       )
-    Chunked(_, _) | FixedArray(_, _, _) =>
+    Chunked(_, _)
+    | FixedArray(_, _, _)
+    | SingleChunk(_, _, _, _)
+    | ImplicitChunks(_, _) =>
       return self.read_chunked_selection(
         path,
         info,

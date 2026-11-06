@@ -24,12 +24,15 @@ pub extend StringPadding with @debug.Debug::{to_repr}
 pub extend StringPadding with Eq::{equal, not_equal}
 
 ///|
-/// Only fixed-size atomic types belong to the initial profile.
+/// Fixed-width atomic and recursively structured HDF5 element types.
 pub(all) enum DataType {
   Signed(Int32, ByteOrder)
   Unsigned(Int32, ByteOrder)
   Float(Int32, ByteOrder)
   FixedString(Int32, StringPadding, Bool)
+  Compound(Int32, Array[CompoundMember])
+  ArrayType(Array[Int32], DataType)
+  EnumType(DataType, Array[(String, Bytes)])
 } derive(Debug, Eq)
 
 ///|
@@ -40,12 +43,7 @@ pub extend DataType with Eq::{equal, not_equal}
 
 ///|
 pub fn DataType::width(self : DataType) -> Int32 raise H5Error {
-  match self {
-    Signed(n, _) | Unsigned(n, _) if n == 1 || n == 2 || n == 4 || n == 8 => n
-    Float(n, _) if n == 4 || n == 8 => n
-    FixedString(n, _, _) if n > 0 && n <= 65535 => n
-    _ => raise Unsupported("unsupported atomic width", 0)
-  }
+  type_width(self, 0, Ref(4096))
 }
 
 ///|
@@ -79,6 +77,40 @@ fn DataType::encode(self : DataType) -> Bytes raise H5Error {
       b.u8(if n == 4 { 23 } else { 52 })
       b.uint(if n == 4 { 127UL } else { 1023UL }, 4)
     }
+    Compound(_, members) => {
+      b.u8(0x36)
+      b.uint(members.length().to_uint64(), 3)
+      b.uint(n.to_uint64(), 4)
+      for field in members {
+        b.bytes(@utf8.encode(field.name))
+        b.u8(0)
+        b.uint(field.offset.to_uint64(), type_offset_width(n))
+        b.bytes(field.datatype.encode())
+      }
+    }
+    ArrayType(shape, base) => {
+      b.u8(0x3a)
+      b.uint(0UL, 3)
+      b.uint(n.to_uint64(), 4)
+      b.u8(shape.length())
+      for dim in shape {
+        b.uint(dim.to_uint64(), 4)
+      }
+      b.bytes(base.encode())
+    }
+    EnumType(base, entries) => {
+      b.u8(0x38)
+      b.uint(entries.length().to_uint64(), 3)
+      b.uint(n.to_uint64(), 4)
+      b.bytes(base.encode())
+      for (name, _) in entries {
+        b.bytes(@utf8.encode(name))
+        b.u8(0)
+      }
+      for (_, value) in entries {
+        b.bytes(value)
+      }
+    }
     FixedString(_, padding, utf8) => {
       b.u8(0x13)
       let pad = match padding {
@@ -96,6 +128,19 @@ fn DataType::encode(self : DataType) -> Bytes raise H5Error {
 
 ///|
 fn decode_type(c : Cursor) -> DataType raise H5Error {
+  decode_type_inner(c, 0, Ref(4096))
+}
+
+///|
+fn decode_type_inner(
+  c : Cursor,
+  depth : Int32,
+  budget : Ref[Int32],
+) -> DataType raise H5Error {
+  budget.val -= 1
+  if depth > 32 || budget.val < 0 {
+    raise Limit("datatype recursion/nodes")
+  }
   let start = c.pos
   let tag = c.u8()
   if tag >> 4 < 1 || tag >> 4 > 4 {
@@ -149,7 +194,74 @@ fn decode_type(c : Cursor) -> DataType raise H5Error {
         (flags & 16) != 0,
       )
     }
-    _ => raise Unsupported("compound/vlen/reference datatype", start)
+    6 => {
+      if flag2 != 0 || flags < 1 || flags > 256 {
+        raise Limit("compound field count")
+      }
+      let members : Array[CompoundMember] = []
+      for i = 0; i < flags; i = i + 1 {
+        let name = type_member_name(c, tag >> 4 < 3)
+        let offset = c.index(
+          if tag >> 4 < 3 {
+            4
+          } else {
+            type_offset_width(n)
+          },
+        )
+        if tag >> 4 == 1 {
+          let rank = c.u8()
+          c.skip(3)
+          if rank != 0 {
+            raise Unsupported("legacy inline compound arrays", start)
+          }
+          c.skip(24)
+        }
+        members.push({
+          name,
+          offset,
+          datatype: decode_type_inner(c, depth + 1, budget),
+        })
+      }
+      Compound(n, members)
+    }
+    10 => {
+      if flags != 0 || flag2 != 0 || tag >> 4 < 2 {
+        raise Unsupported("array datatype flags/version", start)
+      }
+      let rank = c.u8()
+      if rank < 1 || rank > 32 {
+        raise Limit("array datatype rank")
+      }
+      if tag >> 4 == 2 {
+        c.skip(3)
+      }
+      let shape = Array::makei(rank, _ => c.index(4))
+      if tag >> 4 == 2 {
+        for i = 0; i < rank; i = i + 1 {
+          if c.index(4) != i {
+            raise Unsupported("array datatype permutation", start)
+          }
+        }
+      }
+      let base = decode_type_inner(c, depth + 1, budget)
+      let dtype = ArrayType(shape, base)
+      if dtype.width() != n {
+        raise Invalid("array datatype size", start)
+      }
+      dtype
+    }
+    8 => {
+      if flag2 != 0 || flags < 1 || flags > 256 {
+        raise Limit("enum field count")
+      }
+      let base = decode_type_inner(c, depth + 1, budget)
+      if base.width() != n {
+        raise Invalid("enum base size", start)
+      }
+      let names = Array::makei(flags, _ => type_member_name(c, tag >> 4 < 3))
+      EnumType(base, names.map(name => (name, c.bytes(n))))
+    }
+    _ => raise Unsupported("vlen/reference/unknown datatype", start)
   }
   ignore(dtype.width())
   dtype

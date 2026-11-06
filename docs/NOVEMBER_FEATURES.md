@@ -27,6 +27,6 @@ Windows当前工具链路径问题沿用README的项目适配脚本；正式命�
 
 ## 范围
 
-不完整支持任意 HDF5、VLEN/compound、全部chunk索引、压缩写出、resize、SWMR；不自动保证MATLAB7.3、NetCDF-4或Keras上层语义。数组内部表示已封装，直接读旧内部字段的代码需改用公开访问器。
+0.2.0 已补充嵌套定宽compound、array、enum、single/implicit索引读取及分块压缩写出，详见[标准格式能力矩阵](FORMAT_COVERAGE.md)。仍不完整支持任意HDF5、VLEN、全部chunk索引、resize或SWMR；不自动保证MATLAB7.3、NetCDF-4或Keras上层语义。数组内部表示已封装，直接读旧内部字段的代码需改用公开访问器。
 
 h5py双向文件/链接/属性验证；新增轴置换、按轴拼接和三轴全排列坐标对照测试。 具体当前执行结果由本地检查记录提供，不以CI配置代替远端成功记录。

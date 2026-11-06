@@ -4,6 +4,8 @@ pub enum Storage {
   Contiguous(Int32?, Int32)
   Chunked(Int32?, Array[Int32])
   FixedArray(Int32?, Array[Int32], Int32)
+  SingleChunk(Int32?, Array[Int32], Int32?, UInt32)
+  ImplicitChunks(Int32?, Array[Int32])
 } derive(Debug, Eq)
 
 ///|
@@ -63,7 +65,7 @@ fn decode_layout(
       let flags = c.u8()
       let rank = c.u8()
       let width = c.u8()
-      if flags != 0 {
+      if (flags & 0xfd) != 0 {
         raise Unsupported(
           "partial edge filtering or single-index chunk flags",
           m.at,
@@ -77,11 +79,28 @@ fn decode_layout(
         dims.push(c.index(width))
       }
       let kind = c.u8()
-      if kind != 3 {
-        raise Unsupported("single/implicit/extensible/Btree2 chunk index", m.at)
+      if kind == 1 {
+        let stored = if flags == 2 {
+          Some(c.index(sb.size_width))
+        } else {
+          None
+        }
+        let mask = if flags == 2 { c.uint(4).to_uint() } else { 0U }
+        SingleChunk(c.address(sb.offset_width, sb.base), dims, stored, mask)
+      } else if kind == 2 {
+        if flags != 0 {
+          raise Invalid("implicit chunk flags", m.at)
+        }
+        ImplicitChunks(c.address(sb.offset_width, sb.base), dims)
+      } else if kind == 3 {
+        if flags != 0 {
+          raise Invalid("fixed-array chunk flags", m.at)
+        }
+        let page_bits = c.u8()
+        FixedArray(c.address(sb.offset_width, sb.base), dims, page_bits)
+      } else {
+        raise Unsupported("extensible/Btree2 chunk index", m.at)
       }
-      let page_bits = c.u8()
-      FixedArray(c.address(sb.offset_width, sb.base), dims, page_bits)
     }
     _ => raise Unsupported("virtual or unknown storage", m.at)
   }
@@ -208,7 +227,10 @@ pub fn H5File::dataset_info(
       if n != size {
         raise Invalid("contiguous size mismatch", 0)
       }
-    Chunked(_, dims) | FixedArray(_, dims, _) => {
+    Chunked(_, dims)
+    | FixedArray(_, dims, _)
+    | SingleChunk(_, dims, _, _)
+    | ImplicitChunks(_, dims) => {
       guard dataspace is Simple(shape) else {
         raise Invalid("chunked non-simple dataspace", 0)
       }

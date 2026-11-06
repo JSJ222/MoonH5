@@ -40,6 +40,7 @@ fn Document::header(
   addresses : Map[String, Int32],
   raw_addresses : Map[String, Int32],
   index : WriteIndex,
+  chunks : Map[String, ChunkPlan],
 ) -> Bytes raise H5Error {
   guard self.nodes.get(path) is Some(node) else { raise NotFound(path) }
   let messages : Array[Message] = []
@@ -50,22 +51,41 @@ fn Document::header(
       // Defined default fill, late allocation, fill on allocation.
       messages.push(message(5, b"\x02\x02\x02\x01\x00\x00\x00\x00"))
       let layout = buffer()
-      layout.u8(3)
-      if node.compact {
+      if chunks.get(path) is Some(plan) {
+        let pipeline = plan.options.pipeline(value.dtype.width())
+        if !pipeline.is_empty() {
+          messages.push(message(11, encode_pipeline(pipeline)))
+        }
+        layout.u8(4)
+        layout.u8(2)
         layout.u8(0)
-        layout.uint(value.raw.length().to_uint64(), 2)
-        layout.bytes(value.raw)
+        layout.u8(plan.options.shape.length() + 1)
+        layout.u8(4)
+        for n in plan.options.shape {
+          layout.uint(n.to_uint64(), 4)
+        }
+        layout.uint(value.dtype.width().to_uint64(), 4)
+        layout.u8(3)
+        layout.u8(30)
+        layout.uint(raw_addresses.get(path).unwrap_or(0).to_uint64(), 8)
       } else {
-        layout.u8(1)
-        layout.uint(
-          if value.raw.length() == 0 {
-            0xffffffffffffffffUL
-          } else {
-            raw_addresses.get(path).unwrap_or(0).to_uint64()
-          },
-          8,
-        )
-        layout.uint(value.raw.length().to_uint64(), 8)
+        layout.u8(3)
+        if node.compact {
+          layout.u8(0)
+          layout.uint(value.raw.length().to_uint64(), 2)
+          layout.bytes(value.raw)
+        } else {
+          layout.u8(1)
+          layout.uint(
+            if value.raw.length() == 0 {
+              0xffffffffffffffffUL
+            } else {
+              raw_addresses.get(path).unwrap_or(0).to_uint64()
+            },
+            8,
+          )
+          layout.uint(value.raw.length().to_uint64(), 8)
+        }
       }
       messages.push(message(8, layout.finish()))
     }
@@ -106,12 +126,28 @@ fn Document::header(
 pub fn Document::encode(self : Document) -> Bytes raise H5Error {
   let paths = self.node_paths()
   let index = self.write_index(paths)
+  let chunks : Map[String, ChunkPlan] = Map([])
+  let mut retained_chunks = 0
+  for path, options in self.chunk_options {
+    let plan = prepare_chunks(
+      self.nodes[path].value.unwrap(),
+      options,
+      self.limits,
+    )
+    retained_chunks = checked_add(retained_chunks, plan.total_bytes())
+    if retained_chunks > self.limits.max_file_bytes {
+      raise Limit("document encoded chunks")
+    }
+    chunks[path] = plan
+  }
   let addresses : Map[String, Int32] = Map([])
   let raw_addresses : Map[String, Int32] = Map([])
   let sizes : Map[String, Int32] = Map([])
   let mut offset = 48
   for path in paths {
-    let size = self.header(path, addresses, raw_addresses, index).length()
+    let size = self
+      .header(path, addresses, raw_addresses, index, chunks)
+      .length()
     addresses[path] = offset
     sizes[path] = size
     offset = checked_add(offset, size)
@@ -125,7 +161,13 @@ pub fn Document::encode(self : Document) -> Bytes raise H5Error {
     let node = self.nodes.get(path).unwrap()
     if node.value is Some(value) && !node.compact {
       raw_addresses[path] = offset
-      offset = checked_add(offset, value.raw.length())
+      offset = checked_add(
+        offset,
+        match chunks.get(path) {
+          Some(plan) => plan.total_bytes()
+          None => value.raw.length()
+        },
+      )
       if offset > self.limits.max_file_bytes {
         raise Limit("output file size")
       }
@@ -137,7 +179,7 @@ pub fn Document::encode(self : Document) -> Bytes raise H5Error {
   let out = buffer()
   out.bytes(write_superblock(addresses.get("/").unwrap(), offset))
   for path in paths {
-    let header = self.header(path, addresses, raw_addresses, index)
+    let header = self.header(path, addresses, raw_addresses, index, chunks)
     if header.length() != sizes.get(path).unwrap() {
       raise Invalid("unstable header layout", out.length())
     }
@@ -147,7 +189,12 @@ pub fn Document::encode(self : Document) -> Bytes raise H5Error {
   for path in paths {
     let node = self.nodes.get(path).unwrap()
     if node.value is Some(value) && !node.compact {
-      out.bytes(value.raw)
+      out.bytes(
+        match chunks.get(path) {
+          Some(plan) => plan.encode(raw_addresses[path])
+          None => value.raw
+        },
+      )
     }
   }
   out.finish()

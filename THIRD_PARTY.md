@@ -10,3 +10,14 @@
 - `tools/windows` is reused Apache-2.0 build tooling from the user's local MoonSparql project. Its original code and full license are retained there. It is not runtime code or counted MoonBit source.
 
 The MIT license applies to original MoonH5 code and original fixture generation/testing code. The separate licenses above continue to apply to their respective components. Audit/application/AI-assistance reports are intentionally private and excluded from Git and package archives.
+
+
+Format expansion (2026-11-06): recursive fixed-width datatypes and chunk/filter
+writing are independently implemented from the HDF Group public format
+specification. `scripts/interop_format.py` creates original synthetic compound,
+array, enum and conventional complex datasets in temporary files, using pinned
+h5py/HDF5 solely as an independent oracle. It checks actual schema/values and
+compressed output; no HDF5 library implementation source is copied or bound.
+The `latest` fixture bound refers to the installed oracle, not exhaustive future
+format conformance. Newer native complex, VLEN and unimplemented indexes remain
+explicitly documented as future milestones.
