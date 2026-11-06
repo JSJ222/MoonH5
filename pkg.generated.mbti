@@ -34,9 +34,11 @@ pub fn ArrayValue::from_strings(Dataspace, Array[String], Int32, limits? : Limit
 pub fn ArrayValue::from_unsigned(Dataspace, Array[UInt64], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::length(Self) -> Int32 raise H5Error
 pub fn ArrayValue::new(DataType, Dataspace, Bytes, limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::reshape(Self, Dataspace, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::select(Self, Selection) -> Self raise H5Error
 pub fn ArrayValue::signed_at(Self, Int32) -> Int64 raise H5Error
 pub fn ArrayValue::string_at(Self, Int32) -> String raise H5Error
+pub fn ArrayValue::take_axis(Self, Int32, Array[Int32], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::to_repr(Self) -> @debug.Repr
 pub fn ArrayValue::transpose(Self, Array[Int32], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::unsigned_at(Self, Int32) -> UInt64 raise H5Error

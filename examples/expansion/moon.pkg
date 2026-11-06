@@ -1,0 +1,5 @@
+import {
+  "JSJ222/moonh5" @h5,
+}
+
+pkgtype(kind: "executable")
