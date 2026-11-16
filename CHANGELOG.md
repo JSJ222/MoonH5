@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased - 2026-11-16
+
+- 读取稀疏分页 Fixed Array 索引
+
 ## 0.2.0 — 2026-11-06
 
 - Add recursive fixed-width compound, array and integer enum datatypes, structured attributes and field/base projection APIs with descriptor isolation and budgets.

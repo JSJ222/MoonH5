@@ -1,11 +1,12 @@
 ///|
 /// A regular non-overlapping block selection along one axis.
+#derive(Debug, Eq)
 pub(all) struct Axis {
   start : Int32
   stride : Int32
   count : Int32
   block : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Axis with @debug.Debug::{to_repr}
@@ -120,11 +121,12 @@ fn Selection::source_index(
 }
 
 ///|
+#derive(Debug, Eq)
 pub(all) struct ReadSpan {
   source_byte : Int32
   output_byte : Int32
   length : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend ReadSpan with @debug.Debug::{to_repr}

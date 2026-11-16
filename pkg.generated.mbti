@@ -9,20 +9,22 @@ import {
 pub fn metadata_checksum(Bytes) -> UInt32
 
 // Errors
+#derive(Eq, @debug.Debug)
 pub suberror H5Error {
   Invalid(String, Int32)
   Unsupported(String, Int32)
   Limit(String)
   NotFound(String)
-} derive(Eq, @debug.Debug)
+}
 pub fn H5Error::equal(Self, Self) -> Bool
 pub fn H5Error::not_equal(Self, Self) -> Bool
 pub fn H5Error::to_repr(Self) -> @debug.Repr
 
 // Types and methods
+#derive(@debug.Debug)
 pub struct ArrayValue {
   // private fields
-} derive(@debug.Debug)
+}
 pub fn ArrayValue::bytes(Self) -> Bytes
 pub fn ArrayValue::concat_axis(Self, Self, Int32, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::dataspace(Self) -> Dataspace
@@ -50,18 +52,20 @@ pub fn ArrayValue::unsigned_at(Self, Int32) -> UInt64 raise H5Error
 pub fn ArrayValue::with_byte_order(Self, ByteOrder) -> Self raise H5Error
 pub fn ArrayValue::with_selection(Self, Selection, Self) -> Self raise H5Error
 
+#derive(@debug.Debug)
 pub(all) struct Attribute {
   name : String
   value : ArrayValue
-} derive(@debug.Debug)
+}
 pub fn Attribute::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Axis {
   start : Int32
   stride : Int32
   count : Int32
   block : Int32
-} derive(Eq, @debug.Debug)
+}
 pub fn Axis::equal(Self, Self) -> Bool
 pub fn Axis::not_equal(Self, Self) -> Bool
 pub fn Axis::to_repr(Self) -> @debug.Repr
@@ -70,20 +74,22 @@ type BuildLink
 
 type BuildNode
 
+#derive(Eq, @debug.Debug)
 pub(all) enum ByteOrder {
   Little
   Big
-} derive(Eq, @debug.Debug)
+}
 pub fn ByteOrder::equal(Self, Self) -> Bool
 pub fn ByteOrder::not_equal(Self, Self) -> Bool
 pub fn ByteOrder::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct ChunkInfo {
   origin : Array[Int32]
   address : Int32
   stored_bytes : Int32
   filter_mask : UInt32
-} derive(Eq, @debug.Debug)
+}
 pub fn ChunkInfo::equal(Self, Self) -> Bool
 pub fn ChunkInfo::not_equal(Self, Self) -> Bool
 pub fn ChunkInfo::to_repr(Self) -> @debug.Repr
@@ -96,15 +102,17 @@ pub(all) struct ChunkOptions {
 }
 pub fn ChunkOptions::new(Array[Int32], gzip? : Int32?, shuffle? : Bool, fletcher32? : Bool) -> Self
 
+#derive(Eq, @debug.Debug)
 pub(all) struct CompoundMember {
   name : String
   offset : Int32
   datatype : DataType
-} derive(Eq, @debug.Debug)
+}
 pub fn CompoundMember::equal(Self, Self) -> Bool
 pub fn CompoundMember::not_equal(Self, Self) -> Bool
 pub fn CompoundMember::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) enum DataType {
   Signed(Int32, ByteOrder)
   Unsigned(Int32, ByteOrder)
@@ -113,25 +121,27 @@ pub(all) enum DataType {
   Compound(Int32, Array[CompoundMember])
   ArrayType(Array[Int32], DataType)
   EnumType(DataType, Array[(String, Bytes)])
-} derive(Eq, @debug.Debug)
+}
 pub fn DataType::equal(Self, Self) -> Bool
 pub fn DataType::not_equal(Self, Self) -> Bool
 pub fn DataType::to_repr(Self) -> @debug.Repr
 pub fn DataType::width(Self) -> Int32 raise H5Error
 
+#derive(@debug.Debug)
 pub(all) struct DatasetInfo {
   datatype : DataType
   dataspace : Dataspace
   storage : Storage
   fill : Bytes
-} derive(@debug.Debug)
+}
 pub fn DatasetInfo::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) enum Dataspace {
   Scalar
   Simple(Array[Int32])
   Null
-} derive(Eq, @debug.Debug)
+}
 pub fn Dataspace::elements(Self, limits? : Limits) -> Int32 raise H5Error
 pub fn Dataspace::equal(Self, Self) -> Bool
 pub fn Dataspace::not_equal(Self, Self) -> Bool
@@ -152,11 +162,12 @@ pub fn Document::new(limits? : Limits) -> Self raise H5Error
 pub fn Document::set_attribute(Self, String, String, ArrayValue) -> Unit raise H5Error
 pub fn Document::set_chunking(Self, String, ChunkOptions?) -> Unit raise H5Error
 
+#derive(Eq, @debug.Debug)
 pub(all) struct FilterInfo {
   id : Int32
   optional : Bool
   parameters : Array[Int32]
-} derive(Eq, @debug.Debug)
+}
 pub fn FilterInfo::equal(Self, Self) -> Bool
 pub fn FilterInfo::not_equal(Self, Self) -> Bool
 pub fn FilterInfo::to_repr(Self) -> @debug.Repr
@@ -179,6 +190,7 @@ pub fn H5File::superblock_version(Self) -> Int32
 pub fn H5File::to_document(Self) -> Document raise H5Error
 pub fn H5File::walk(Self) -> Array[ObjectEntry] raise H5Error
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Limits {
   max_file_bytes : Int32
   max_elements : Int32
@@ -186,42 +198,46 @@ pub(all) struct Limits {
   max_objects : Int32
   max_depth : Int32
   max_rank : Int32
-} derive(Eq, @debug.Debug)
+}
 pub fn Limits::default() -> Self
 pub fn Limits::equal(Self, Self) -> Bool
 pub fn Limits::not_equal(Self, Self) -> Bool
 pub fn Limits::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Link {
   name : String
   target : LinkTarget
-} derive(Eq, @debug.Debug)
+}
 pub fn Link::equal(Self, Self) -> Bool
 pub fn Link::not_equal(Self, Self) -> Bool
 pub fn Link::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub enum LinkTarget {
   Hard(Int32)
   Soft(String)
-} derive(Eq, @debug.Debug)
+}
 pub fn LinkTarget::equal(Self, Self) -> Bool
 pub fn LinkTarget::not_equal(Self, Self) -> Bool
 pub fn LinkTarget::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct ObjectEntry {
   path : String
   address : Int32
   dataset : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn ObjectEntry::equal(Self, Self) -> Bool
 pub fn ObjectEntry::not_equal(Self, Self) -> Bool
 pub fn ObjectEntry::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) struct ReadSpan {
   source_byte : Int32
   output_byte : Int32
   length : Int32
-} derive(Eq, @debug.Debug)
+}
 pub fn ReadSpan::equal(Self, Self) -> Bool
 pub fn ReadSpan::not_equal(Self, Self) -> Bool
 pub fn ReadSpan::to_repr(Self) -> @debug.Repr
@@ -237,6 +253,7 @@ pub fn Selection::dataspace(Self) -> Dataspace
 pub fn Selection::new(Dataspace, Array[Axis], limits? : Limits) -> Self raise H5Error
 pub fn Selection::spans(Self, DataType) -> Array[ReadSpan] raise H5Error
 
+#derive(Eq, @debug.Debug)
 pub enum Storage {
   Compact(Bytes)
   Contiguous(Int32?, Int32)
@@ -244,16 +261,17 @@ pub enum Storage {
   FixedArray(Int32?, Array[Int32], Int32)
   SingleChunk(Int32?, Array[Int32], Int32?, UInt32)
   ImplicitChunks(Int32?, Array[Int32])
-} derive(Eq, @debug.Debug)
+}
 pub fn Storage::equal(Self, Self) -> Bool
 pub fn Storage::not_equal(Self, Self) -> Bool
 pub fn Storage::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) enum StringPadding {
   NullTerminated
   NullPadded
   SpacePadded
-} derive(Eq, @debug.Debug)
+}
 pub fn StringPadding::equal(Self, Self) -> Bool
 pub fn StringPadding::not_equal(Self, Self) -> Bool
 pub fn StringPadding::to_repr(Self) -> @debug.Repr

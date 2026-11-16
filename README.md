@@ -8,7 +8,7 @@
 
 ## 安装与复现
 
-安装 [官方 MoonBit 工具链](https://docs.moonbitlang.com/en/latest/download-and-install.html)，已验证 `moonc 0.10.16`，CI 固定 compiler/core 0.10.16+b1a0e846e。进入此项目目录后：
+安装 [官方 MoonBit 工具链](https://docs.moonbitlang.com/en/latest/download-and-install.html)，已验证 `moonc 0.10.20`，CI 固定 compiler/core 0.10.20+65efd5b93。进入此项目目录后：
 
 ```sh
 moon version --all
@@ -80,13 +80,13 @@ fn main raise {
 | --- | --- | --- |
 | 文件 | superblock 0/1/2/3、标准 user block、2/4/8 字节地址/长度；v2/3 校验和 | SWMR/活动写入、多文件驱动、superblock 扩展 |
 | 对象与组 | v1/v2 对象头与继续块；旧符号表、compact links；硬链接别名/环和软链接 | dense groups/fractal heaps、外部链接、共享/提交类型 |
-| 数组 | scalar、simple、null 和零长度维；连续、紧凑、旧 v1 B-tree 分块；现代未分页 fixed-array、single、implicit 分块 | paged fixed-array、extensible/v2 B-tree 索引、VDS、resize |
+| 数组 | scalar、simple、null 和零长度维；连续、紧凑、旧 v1 B-tree 分块；现代 fixed-array（含分页）、single、implicit 分块 | extensible/v2 B-tree 索引、VDS、resize |
 | 类型 | 8/16/32/64 位整数、IEEE32/64、定长 ASCII/UTF-8、嵌套 compound、定长 array、整数 enum；大小端 | VLEN、reference、opaque、原生 class-11 complex、非标准浮点 |
 | 属性 | 内联 v1/v2/v3 定宽数组属性 | dense/shared 属性 |
 | 过滤器 | gzip（实际为 zlib 封装 DEFLATE）、shuffle、Fletcher32；逐块 filter mask | LZF、SZIP、插件、scale-offset；部分边界块跳过滤器布局标志 |
 | 写出 | 新建确定性 superblock2/object-header2、compact groups、连续/紧凑及固定范围分块数组、gzip/shuffle/Fletcher32、结构化属性、硬/软链接 | 空/可扩展分块写出、就地修改、保留未知消息或物理布局 |
 
-fixed-array 仅接受当前网格与索引最大网格一致的未分页索引。superblock1 解析入口存在，但独立 h5py 样例主要验证 0/2/3；不将入口存在等同于任意变体均验证。文件打开只验证入口及根对象，其余对象按访问校验。
+fixed-array 要求当前网格与索引最大网格一致。分页时校验页位图与已初始化页的校验和。superblock1 解析入口存在，但独立 h5py 样例主要验证 0/2/3；不将入口存在等同于任意变体均验证。文件打开只验证入口及根对象，其余对象按访问校验。
 
 `to_document()` 将受支持数据语义化重新打包，保留数组、属性及链接关系，不承诺保留字节布局、过滤器、对象时间戳、注释或所有创建属性。不支持的类型、组、存储和属性会报错；不要用它无损复制任意第三方文件。路径不接受 `..`，重叠 hyperslab block 也会明确拒绝。
 
@@ -142,3 +142,7 @@ Windows 使用 `_local\venv\Scripts\python.exe`，Moon 命令可改为上述 Win
 新增 **无损形状重排**、**有序轴采样 gather**，用途、限制和复杂度见 [功能文档](docs/EXPANSION_20261106.md)。
 从本仓库源码运行 `moon run examples/expansion --target native --deny-warn`。
 本节 API 从0.2.0起提供。
+
+## 读取稀疏分页 Fixed Array 索引 (Unreleased)
+
+校验索引头和位图，仅处理已初始化页并校验每页校验和。未分配块按填充值读取。h5py 对照覆盖普通及过滤数据、有空洞的页、短尾页及损坏页拒绝。用于接入较大固定形状的传感器和栅格文件。写出继续使用未分页索引。

@@ -126,11 +126,12 @@ pub fn H5File::object_address(
 }
 
 ///|
+#derive(Debug, Eq)
 pub(all) struct ObjectEntry {
   path : String
   address : Int32
   dataset : Bool
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend ObjectEntry with @debug.Debug::{to_repr}

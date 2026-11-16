@@ -1,9 +1,10 @@
 ///|
+#derive(Debug, Eq)
 pub(all) struct CompoundMember {
   name : String
   offset : Int32
   datatype : DataType
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend CompoundMember with @debug.Debug::{to_repr}

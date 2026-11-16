@@ -1,8 +1,9 @@
 ///|
+#derive(Debug)
 pub(all) struct Attribute {
   name : String
   value : ArrayValue
-} derive(Debug)
+}
 
 ///|
 pub extend Attribute with @debug.Debug::{to_repr}

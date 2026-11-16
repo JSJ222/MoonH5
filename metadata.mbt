@@ -1,4 +1,5 @@
 ///|
+#derive(Debug, Eq)
 pub enum Storage {
   Compact(Bytes)
   Contiguous(Int32?, Int32)
@@ -6,7 +7,7 @@ pub enum Storage {
   FixedArray(Int32?, Array[Int32], Int32)
   SingleChunk(Int32?, Array[Int32], Int32?, UInt32)
   ImplicitChunks(Int32?, Array[Int32])
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Storage with @debug.Debug::{to_repr}
@@ -15,12 +16,13 @@ pub extend Storage with @debug.Debug::{to_repr}
 pub extend Storage with Eq::{equal, not_equal}
 
 ///|
+#derive(Debug)
 pub(all) struct DatasetInfo {
   datatype : DataType
   dataspace : Dataspace
   storage : Storage
   fill : Bytes
-} derive(Debug)
+}
 
 ///|
 pub extend DatasetInfo with @debug.Debug::{to_repr}

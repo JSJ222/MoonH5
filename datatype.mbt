@@ -1,8 +1,9 @@
 ///|
+#derive(Debug, Eq)
 pub(all) enum ByteOrder {
   Little
   Big
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend ByteOrder with @debug.Debug::{to_repr}
@@ -11,11 +12,12 @@ pub extend ByteOrder with @debug.Debug::{to_repr}
 pub extend ByteOrder with Eq::{equal, not_equal}
 
 ///|
+#derive(Debug, Eq)
 pub(all) enum StringPadding {
   NullTerminated
   NullPadded
   SpacePadded
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend StringPadding with @debug.Debug::{to_repr}
@@ -25,6 +27,7 @@ pub extend StringPadding with Eq::{equal, not_equal}
 
 ///|
 /// Fixed-width atomic and recursively structured HDF5 element types.
+#derive(Debug, Eq)
 pub(all) enum DataType {
   Signed(Int32, ByteOrder)
   Unsigned(Int32, ByteOrder)
@@ -33,7 +36,7 @@ pub(all) enum DataType {
   Compound(Int32, Array[CompoundMember])
   ArrayType(Array[Int32], DataType)
   EnumType(DataType, Array[(String, Bytes)])
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend DataType with @debug.Debug::{to_repr}

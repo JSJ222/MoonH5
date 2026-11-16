@@ -1,9 +1,10 @@
 ///|
+#derive(Debug, Eq)
 pub(all) enum Dataspace {
   Scalar
   Simple(Array[Int32])
   Null
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Dataspace with @debug.Debug::{to_repr}

@@ -13,7 +13,7 @@ working read/write paths, independent HDF5 files and failure/budget tests.
 | Array datatypes | fixed array per element, nested in compound or standalone; read v2/v3, write v3 | vectors, covariance blocks, multichannel samples |
 | Enumerated types | integer base with named raw values; read v1/v2/v3 layouts, write v3 | quality flags, categorical scientific metadata |
 | Complex values | conventional two-floating-member compound representation (e.g. h5py complex128) | frequency-domain and simulation records |
-| Modern storage | read single-chunk (including filtered) and early-allocated implicit indexes, in addition to existing v1 B-tree/unpaged fixed array | common fixed-extent HDF5 producer files |
+| Modern storage | read single-chunk (including filtered) and early-allocated implicit indexes, in addition to v1 B-tree and fixed array (paged and unpaged) | common fixed-extent HDF5 producer files |
 | Chunk writing | fixed-extent, positive Simple datasets using standard layout v4/unpaged fixed-array indexes | bounded blocked output and interoperability |
 | Filter writing | gzip filter's zlib/DEFLATE, shuffle, Fletcher32; composable pipeline | compressed exchange and integrity checking |
 | Compressed repacking | opt-in storage choice on existing Document datasets, plus CLI repack-compressed | convert supported input datasets to compressed output |
@@ -123,7 +123,7 @@ array expansion shares immutable bytes. Chunk assembly is O(padded elements*rank
 retains all encoded chunks. Selection caches only hit chunks but input remains
 an in-memory file; indexes are traversed under budgets.
 
-1. **Index expansion**: paged fixed arrays, extensible arrays and v2 B-tree indexes,
+1. **Index expansion**: extensible arrays and v2 B-tree indexes,
    preserving sparse allocation and edge masks. Completion gate: independent
    larger/unlimited-extent files, sparse/fill cases, selection equivalence,
    metadata corruption and traversal limits.

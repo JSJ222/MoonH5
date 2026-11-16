@@ -1,9 +1,10 @@
 ///|
+#derive(Debug, Eq)
 pub(all) struct FilterInfo {
   id : Int32
   optional : Bool
   parameters : Array[Int32]
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend FilterInfo with @debug.Debug::{to_repr}

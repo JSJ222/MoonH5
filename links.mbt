@@ -1,8 +1,9 @@
 ///|
+#derive(Debug, Eq)
 pub enum LinkTarget {
   Hard(Int32)
   Soft(String)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend LinkTarget with @debug.Debug::{to_repr}
@@ -11,10 +12,11 @@ pub extend LinkTarget with @debug.Debug::{to_repr}
 pub extend LinkTarget with Eq::{equal, not_equal}
 
 ///|
+#derive(Debug, Eq)
 pub(all) struct Link {
   name : String
   target : LinkTarget
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Link with @debug.Debug::{to_repr}

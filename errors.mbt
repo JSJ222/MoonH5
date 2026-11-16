@@ -1,11 +1,12 @@
 ///|
 /// Errors carry a byte offset when caused by an on-disk encoding.
+#derive(Debug, Eq)
 pub suberror H5Error {
   Invalid(String, Int32)
   Unsupported(String, Int32)
   Limit(String)
   NotFound(String)
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend H5Error with @debug.Debug::{to_repr}
@@ -15,6 +16,7 @@ pub extend H5Error with Eq::{equal, not_equal}
 
 ///|
 /// Hard bounds apply before allocation or traversal, even for trusted input.
+#derive(Debug, Eq)
 pub(all) struct Limits {
   max_file_bytes : Int32
   max_elements : Int32
@@ -22,7 +24,7 @@ pub(all) struct Limits {
   max_objects : Int32
   max_depth : Int32
   max_rank : Int32
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend Limits with @debug.Debug::{to_repr}

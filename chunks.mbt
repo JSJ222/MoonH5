@@ -1,10 +1,11 @@
 ///|
+#derive(Debug, Eq)
 pub(all) struct ChunkInfo {
   origin : Array[Int32]
   address : Int32
   stored_bytes : Int32
   filter_mask : UInt32
-} derive(Debug, Eq)
+}
 
 ///|
 pub extend ChunkInfo with @debug.Debug::{to_repr}

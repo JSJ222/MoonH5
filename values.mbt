@@ -1,10 +1,11 @@
 ///|
 /// Immutable byte storage; shape accessors return defensive copies.
+#derive(Debug)
 pub struct ArrayValue {
   priv dtype : DataType
   priv space : Dataspace
   priv raw : Bytes
-} derive(Debug)
+}
 
 ///|
 pub extend ArrayValue with @debug.Debug::{to_repr}

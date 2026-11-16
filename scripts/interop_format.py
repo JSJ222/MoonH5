@@ -106,6 +106,29 @@ def verify(cli):
                         if command == 'repack-compressed':
                             assert b.chunks is not None and b.compression == 'gzip' and b.shuffle and b.fletcher32
                 run(command, source, target, success=False)
+        # Each page covers 1024 entries in HDF5's standard fixed-array layout.
+        # Leave page 1 entirely unallocated and page 2 partially populated.
+        sparse = root / 'paged.h5'
+        with h5py.File(sparse, 'w', libver='latest') as f:
+            for name, options in [('plain', {}), ('filtered', {'compression': 'gzip', 'fletcher32': True})]:
+                d = f.create_dataset(name, (2101,), dtype='<i4', chunks=(1,), fillvalue=-7, **options)
+                for i in [0, 1023, 2048, 2100]:
+                    d[i] = i + 11
+                assert d.id.get_num_chunks() == 4
+        payload = sparse.read_bytes()
+        assert payload.count(b'FAHD') == 2 and payload.count(b'FADB') == 2
+        for entry in json.loads(run('read', sparse)):
+            if 'data' not in entry:
+                continue
+            with h5py.File(sparse, 'r') as f:
+                expected = f[entry['path']][()]
+            np.testing.assert_array_equal(np.array(entry['data']['values'], dtype='i4'), expected)
+        damaged = root / 'paged-damaged.h5'
+        bad = bytearray(payload)
+        # Eight-byte offsets, one bitmap byte, four prefix checksum bytes.
+        bad[bad.index(b'FADB') + 19] ^= 1
+        damaged.write_bytes(bad)
+        run('read', damaged, success=False)
         target = root / 'native.h5'
         run('write-format', target)
         with h5py.File(target, 'r') as f:
@@ -123,7 +146,7 @@ def verify(cli):
                 assert d.compression_opts == level and d.fletcher32
                 np.testing.assert_array_equal(d[()], np.array([1, 2, 3, 4, 5, 6, 2**64-1], dtype='u8'))
         run('write-format', target, success=False)
-    print('PASS: h5py/HDF5 structured compound/array/enum/complex records, attributes, earliest/v108/latest files, single/implicit indexes, compressed writes and repacking (gzip/shuffle/Fletcher32), exact Uint64 and edge chunks')
+    print('PASS: h5py/HDF5 structured compound/array/enum/complex records, attributes, earliest/v108/latest files, single/implicit and sparse paged fixed-array indexes, compressed writes and repacking (gzip/shuffle/Fletcher32), exact Uint64 and edge chunks')
 
 
 if __name__ == '__main__':
