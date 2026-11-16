@@ -32,6 +32,7 @@ pub fn ArrayValue::datatype(Self) -> DataType
 pub fn ArrayValue::element(Self, Int32) -> Self raise H5Error
 pub fn ArrayValue::enum_base(Self, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::enum_name_at(Self, Int32) -> String? raise H5Error
+pub fn ArrayValue::enum_names(Self, limits? : Limits) -> Array[String?] raise H5Error
 pub fn ArrayValue::expand_array(Self, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::field(Self, String, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::float_at(Self, Int32) -> Double raise H5Error
