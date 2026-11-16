@@ -50,6 +50,7 @@ pub fn ArrayValue::to_repr(Self) -> @debug.Repr
 pub fn ArrayValue::transpose(Self, Array[Int32], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::unsigned_at(Self, Int32) -> UInt64 raise H5Error
 pub fn ArrayValue::with_byte_order(Self, ByteOrder) -> Self raise H5Error
+pub fn ArrayValue::with_field(Self, String, Self, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::with_selection(Self, Selection, Self) -> Self raise H5Error
 
 #derive(@debug.Debug)
