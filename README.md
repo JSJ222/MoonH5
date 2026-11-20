@@ -146,3 +146,7 @@ Windows 使用 `_local\venv\Scripts\python.exe`，Moon 命令可改为上述 Win
 ## 读取稀疏分页 Fixed Array 索引 (Unreleased)
 
 校验索引头和位图，仅处理已初始化页并校验每页校验和。未分配块按填充值读取。h5py 对照覆盖普通及过滤数据、有空洞的页、短尾页及损坏页拒绝。用于接入较大固定形状的传感器和栅格文件。写出继续使用未分页索引。
+
+## November additions
+
+Use `field_path` and `with_field_path` to address nested compound members. Replacement requires the same datatype and extent and preserves other bytes and record padding. `read_field_selection` combines a hyperslab with field projection. Compact and contiguous paths copy only field bytes, while chunked paths decode selected records before projection. `plan_chunks` lists stored chunks intersecting an exact non-overlapping hyperslab. It leaves unallocated fill regions outside the returned file ranges.

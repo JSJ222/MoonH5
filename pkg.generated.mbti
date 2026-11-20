@@ -35,6 +35,7 @@ pub fn ArrayValue::enum_name_at(Self, Int32) -> String? raise H5Error
 pub fn ArrayValue::enum_names(Self, limits? : Limits) -> Array[String?] raise H5Error
 pub fn ArrayValue::expand_array(Self, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::field(Self, String, limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::field_path(Self, Array[String], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::float_at(Self, Int32) -> Double raise H5Error
 pub fn ArrayValue::from_floats(Dataspace, Array[Double], limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::from_signed(Dataspace, Array[Int64], limits? : Limits) -> Self raise H5Error
@@ -52,6 +53,7 @@ pub fn ArrayValue::transpose(Self, Array[Int32], limits? : Limits) -> Self raise
 pub fn ArrayValue::unsigned_at(Self, Int32) -> UInt64 raise H5Error
 pub fn ArrayValue::with_byte_order(Self, ByteOrder) -> Self raise H5Error
 pub fn ArrayValue::with_field(Self, String, Self, limits? : Limits) -> Self raise H5Error
+pub fn ArrayValue::with_field_path(Self, Array[String], Self, limits? : Limits) -> Self raise H5Error
 pub fn ArrayValue::with_selection(Self, Selection, Self) -> Self raise H5Error
 
 #derive(@debug.Debug)
@@ -186,7 +188,9 @@ pub fn H5File::filters(Self, String) -> Array[FilterInfo] raise H5Error
 pub fn H5File::links(Self, path? : String) -> Array[Link] raise H5Error
 pub fn H5File::object_address(Self, String) -> Int32 raise H5Error
 pub fn H5File::open(Bytes, limits? : Limits) -> Self raise H5Error
+pub fn H5File::plan_chunks(Self, String, Selection) -> Array[ChunkInfo] raise H5Error
 pub fn H5File::read(Self, String) -> ArrayValue raise H5Error
+pub fn H5File::read_field_selection(Self, String, Selection, Array[String]) -> ArrayValue raise H5Error
 pub fn H5File::read_selection(Self, String, Selection) -> ArrayValue raise H5Error
 pub fn H5File::superblock_version(Self) -> Int32
 pub fn H5File::to_document(Self) -> Document raise H5Error
