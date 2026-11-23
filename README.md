@@ -150,3 +150,9 @@ Windows 使用 `_local\venv\Scripts\python.exe`，Moon 命令可改为上述 Win
 ## November additions
 
 Use `field_path` and `with_field_path` to address nested compound members. Replacement requires the same datatype and extent and preserves other bytes and record padding. `read_field_selection` combines a hyperslab with field projection. Compact and contiguous paths copy only field bytes, while chunked paths decode selected records before projection. `plan_chunks` lists stored chunks intersecting an exact non-overlapping hyperslab. It leaves unallocated fill regions outside the returned file ranges.
+
+## 本期交付复核
+
+读取范围包括 HDF5 未分页与分页 fixed-array、single-chunk 和 implicit 索引。分页读取按页位图定位数据，未分配区域返回显式填充值，已分配页的损坏由校验和识别。当前写出仍针对固定尺寸分块，保留结构化类型和 gzip、shuffle、Fletcher32 设置。
+
+四个后端各通过 65 项回归，七个示例和两组 h5py 双向验证均通过。结构化互操作覆盖 sparse paged fixed-array 的独立文件、损坏页拒绝、记录字段、UInt64 最大值和边缘分块。
